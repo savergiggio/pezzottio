@@ -78,26 +78,12 @@ function systemStats() {
   return out;
 }
 
-// Banda: usa vnstat se installato (totale persistente + ultime 24h), altrimenti
-// fallback a /proc/net/dev (solo cumulativo dal boot, niente finestra 24h).
+// Banda: legge SIA il cumulativo dal boot (/proc/net/dev, immediato) SIA vnstat
+// (totale persistente + finestra 24h). L'embed sceglie quale "total" mostrare:
+// vnstat se ha già accumulato dati, altrimenti il since-boot come fallback utile.
 function bandwidthStats() {
-  // 1) vnstat — DB persistente, dà total all-time + dati orari per il 24h.
-  try {
-    const { execSync } = require('child_process');
-    const raw = execSync('vnstat --json 2>/dev/null', { timeout: 5000 }).toString();
-    const j = JSON.parse(raw);
-    const ifaces = j.interfaces || [];
-    const pick = ifaces.find((i) => i.name === 'eth0')
-      || [...ifaces].sort((a, b) => ((b.traffic?.total?.rx || 0) + (b.traffic?.total?.tx || 0)) - ((a.traffic?.total?.rx || 0) + (a.traffic?.total?.tx || 0)))[0];
-    const t = pick && pick.traffic;
-    if (t && t.total) {
-      const total = (t.total.rx || 0) + (t.total.tx || 0);
-      const hours = Array.isArray(t.hour) ? t.hour.slice(-24) : [];
-      const last24 = hours.reduce((s, h) => s + (h.rx || 0) + (h.tx || 0), 0);
-      return { bwTotal: total, bw24: last24, bwSrc: 'vnstat' };
-    }
-  } catch (_) { /* vnstat assente o errore → fallback */ }
-  // 2) Fallback /proc/net/dev — somma rx+tx delle interfacce fisiche (no loopback/docker).
+  const out = {};
+  // proc /proc/net/dev — cumulativo dal boot, sempre disponibile e immediato.
   try {
     const dev = fs.readFileSync('/proc/net/dev', 'utf8');
     let rx = 0; let tx = 0;
@@ -105,9 +91,23 @@ function bandwidthStats() {
       const m = line.match(/^\s*(eth\d+|ens\d+|enp\d+s\d+|eno\d+):\s*(\d+)(?:\s+\d+){7}\s+(\d+)/);
       if (m) { rx += parseInt(m[2], 10); tx += parseInt(m[3], 10); }
     }
-    if (rx || tx) return { bwTotal: rx + tx, bw24: null, bwSrc: 'proc' };
+    if (rx || tx) out.bwBoot = rx + tx;
   } catch (_) {}
-  return {};
+  // vnstat — DB persistente: totale (dall'installazione) + dati orari per il 24h.
+  try {
+    const { execSync } = require('child_process');
+    const j = JSON.parse(execSync('vnstat --json 2>/dev/null', { timeout: 5000 }).toString());
+    const ifaces = j.interfaces || [];
+    const pick = ifaces.find((i) => i.name === 'eth0')
+      || [...ifaces].sort((a, b) => ((b.traffic?.total?.rx || 0) + (b.traffic?.total?.tx || 0)) - ((a.traffic?.total?.rx || 0) + (a.traffic?.total?.tx || 0)))[0];
+    const t = pick && pick.traffic;
+    if (t && t.total) {
+      out.bwTotal = (t.total.rx || 0) + (t.total.tx || 0);
+      const hours = Array.isArray(t.hour) ? t.hour.slice(-24) : [];
+      out.bw24 = hours.reduce((s, h) => s + (h.rx || 0) + (h.tx || 0), 0);
+    }
+  } catch (_) { /* vnstat assente → resta solo bwBoot */ }
+  return out;
 }
 
 async function fetchStatus() {
@@ -140,10 +140,12 @@ function buildEmbed(status, sys) {
   if (sys.memTotal) vpsParts.push(`🧠 RAM ${fmtBytes(sys.memUsed)}/${fmtBytes(sys.memTotal)} (${sys.memPct}%)`);
   if (sys.swapTotal) vpsParts.push(`💤 Swap ${fmtBytes(sys.swapUsed)}/${fmtBytes(sys.swapTotal)}`);
   if (sys.diskTotal) vpsParts.push(`💽 Disk ${fmtBytes(sys.diskUsed)}/${fmtBytes(sys.diskTotal)} (${sys.diskPct}%)`);
-  if (sys.bwTotal != null) {
-    let bw = `🌐 Traffic ${fmtBytes(sys.bwTotal)} total`;
-    if (sys.bw24 != null) bw += ` · ${fmtBytes(sys.bw24)} (24h)`;
-    else if (sys.bwSrc === 'proc') bw += ' (since boot)';
+  // "total": vnstat se ha già dati (>0), altrimenti since-boot come fallback immediato.
+  const hasVnstat = sys.bwTotal != null && sys.bwTotal > 0;
+  const totalBytes = hasVnstat ? sys.bwTotal : sys.bwBoot;
+  if (totalBytes != null) {
+    let bw = `🌐 Traffic ${fmtBytes(totalBytes)} ${hasVnstat ? 'total' : 'since boot'}`;
+    if (sys.bw24 != null && sys.bw24 > 0) bw += ` · ${fmtBytes(sys.bw24)} (24h)`;
     vpsParts.push(bw);
   }
   if (sys.load) vpsParts.push(`📊 Load ${sys.load}`);
