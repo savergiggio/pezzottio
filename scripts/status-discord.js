@@ -74,7 +74,40 @@ function systemStats() {
     const total = s.blocks * s.bsize; const free = s.bfree * s.bsize;
     out.diskTotal = total; out.diskUsed = total - free; out.diskPct = total ? Math.round((total - free) / total * 100) : 0;
   } catch (_) {}
+  Object.assign(out, bandwidthStats());
   return out;
+}
+
+// Banda: usa vnstat se installato (totale persistente + ultime 24h), altrimenti
+// fallback a /proc/net/dev (solo cumulativo dal boot, niente finestra 24h).
+function bandwidthStats() {
+  // 1) vnstat — DB persistente, dà total all-time + dati orari per il 24h.
+  try {
+    const { execSync } = require('child_process');
+    const raw = execSync('vnstat --json 2>/dev/null', { timeout: 5000 }).toString();
+    const j = JSON.parse(raw);
+    const ifaces = j.interfaces || [];
+    const pick = ifaces.find((i) => i.name === 'eth0')
+      || [...ifaces].sort((a, b) => ((b.traffic?.total?.rx || 0) + (b.traffic?.total?.tx || 0)) - ((a.traffic?.total?.rx || 0) + (a.traffic?.total?.tx || 0)))[0];
+    const t = pick && pick.traffic;
+    if (t && t.total) {
+      const total = (t.total.rx || 0) + (t.total.tx || 0);
+      const hours = Array.isArray(t.hour) ? t.hour.slice(-24) : [];
+      const last24 = hours.reduce((s, h) => s + (h.rx || 0) + (h.tx || 0), 0);
+      return { bwTotal: total, bw24: last24, bwSrc: 'vnstat' };
+    }
+  } catch (_) { /* vnstat assente o errore → fallback */ }
+  // 2) Fallback /proc/net/dev — somma rx+tx delle interfacce fisiche (no loopback/docker).
+  try {
+    const dev = fs.readFileSync('/proc/net/dev', 'utf8');
+    let rx = 0; let tx = 0;
+    for (const line of dev.split('\n')) {
+      const m = line.match(/^\s*(eth\d+|ens\d+|enp\d+s\d+|eno\d+):\s*(\d+)(?:\s+\d+){7}\s+(\d+)/);
+      if (m) { rx += parseInt(m[2], 10); tx += parseInt(m[3], 10); }
+    }
+    if (rx || tx) return { bwTotal: rx + tx, bw24: null, bwSrc: 'proc' };
+  } catch (_) {}
+  return {};
 }
 
 async function fetchStatus() {
@@ -107,6 +140,12 @@ function buildEmbed(status, sys) {
   if (sys.memTotal) vpsParts.push(`🧠 RAM ${fmtBytes(sys.memUsed)}/${fmtBytes(sys.memTotal)} (${sys.memPct}%)`);
   if (sys.swapTotal) vpsParts.push(`💤 Swap ${fmtBytes(sys.swapUsed)}/${fmtBytes(sys.swapTotal)}`);
   if (sys.diskTotal) vpsParts.push(`💽 Disk ${fmtBytes(sys.diskUsed)}/${fmtBytes(sys.diskTotal)} (${sys.diskPct}%)`);
+  if (sys.bwTotal != null) {
+    let bw = `🌐 Traffic ${fmtBytes(sys.bwTotal)} total`;
+    if (sys.bw24 != null) bw += ` · ${fmtBytes(sys.bw24)} (24h)`;
+    else if (sys.bwSrc === 'proc') bw += ' (since boot)';
+    vpsParts.push(bw);
+  }
   if (sys.load) vpsParts.push(`📊 Load ${sys.load}`);
   if (sys.uptime) vpsParts.push(`⏱️ Uptime ${fmtUptime(sys.uptime)}`);
   fields.unshift({ name: '🖥️ VPS', value: vpsParts.join('\n') || '—', inline: false });
