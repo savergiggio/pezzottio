@@ -18,6 +18,11 @@ const { findFileForEpisode } = require('./parse');
 
 const PUBLIC_HOST = process.env.PUBLIC_HOST || 'https://pezz8io.dpdns.org';
 
+// Estensione locale opzionale (assente nel repo): se presente, può estendere
+// manifest e gestire risorse aggiuntive. Carica in modo silenzioso.
+let ext = null;
+try { ext = require('./providers/ext.local'); } catch (_) { ext = null; }
+
 // Generi Kitsu (selezione: i più usati). Permette filter dropdown in Stremio.
 const KITSU_GENRES = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Sci-Fi', 'Mystery', 'Magic',
@@ -112,10 +117,15 @@ const manifest = {
   },
 };
 
+// L'estensione locale può aggiungere type/idPrefix al manifest base.
+try { if (ext && ext.init) ext.init(manifest); } catch (_) {}
+
 const builder = new addonBuilder(manifest);
 
 builder.defineStreamHandler(async ({ type, id }) => {
   try {
+    if (ext && ext.stream) { const r = await ext.stream({ type, id }); if (r) return r; }
+
     const meta = await resolveTitle(type, id);
     // Stremio id completo (tt0903747:1:1 / kitsu:45398:1 / tmdb:30983:1:1 ecc.) —
     // serve agli addon esterni che capiscono i loro formati nativi.
@@ -1036,6 +1046,8 @@ builder.defineCatalogHandler(async ({ type, id, extra }) => {
     const genre = extra?.genre || null;
     const search = extra?.search || null;
 
+    if (ext && ext.catalog) { const r = await ext.catalog({ type, id, extra }); if (r) return r; }
+
     let metas = [];
     const isSearch = id.startsWith('pezzottio-anime-search');
     if (isSearch) {
@@ -1074,6 +1086,8 @@ builder.defineCatalogHandler(async ({ type, id, extra }) => {
 // Additive — non cambia il behavior IT (cinemeta italiano risolve uguale).
 builder.defineMetaHandler(async ({ type, id }) => {
   try {
+    if (ext && ext.meta) { const r = await ext.meta({ type, id }); if (r) return r; }
+
     if (id && id.startsWith('kitsu:')) {
       const data = await kitsu.getMeta(type, id);
       if (data && data.meta) {

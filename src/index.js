@@ -3,6 +3,9 @@ const fetch = require('node-fetch');
 const { getRouter } = require('stremio-addon-sdk');
 const addonInterface = require('./addon');
 const { getConfig, runWithConfig, decodeConfig } = require('./config');
+// Estensione locale opzionale (assente nel repo).
+let _ext = null;
+try { _ext = require('./providers/ext.local'); } catch (_) { _ext = null; }
 const configurePage = require('./pages/configure');
 const configurePageEN = require('./pages/configure-en');
 const legalPage = require('./pages/legal');
@@ -1649,6 +1652,8 @@ function serveManifest(req, res) {
     if (lang === 'en') {
       m.description = 'Movies, series & anime with English audio first. 30+ sources, Real-Debrid & Torbox, built-in HLS proxy (no Docker/VPS). Netflix, Prime, Disney+ & more catalogs in Discover. 30s setup. 💬 Discord: https://discord.gg/Tpv3WMe77k';
     }
+    // Hook estensione locale (opzionale): può aggiungere catalog/type al manifest.
+    try { if (_ext && _ext.manifest) _ext.manifest(m, req.userConfig || {}, lang); } catch (_) {}
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'max-age=300, public');
     res.send(JSON.stringify(m));

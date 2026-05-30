@@ -16,3 +16,4 @@ scripts/*
 # stato runtime dei poster Discord — mai committare
 scripts/.changelog-posted.json
 scripts/.status-message-id.json
+data/
