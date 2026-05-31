@@ -6,7 +6,7 @@
 
 Apri Stremio, premi play, guardi.
 Film, serie, anime — tutti in italiano, prima possibile.
-**Una sola installazione. Zero proxy da configurare. Zero Docker.**
+**Una sola installazione. Zero proxy da configurare.**
 
 [![Try it](https://img.shields.io/badge/▶_PROVALO_ORA-pezz8io.dpdns.org-e50914?style=for-the-badge)](https://pezz8io.dpdns.org/configure)
 [![Telegram](https://img.shields.io/badge/Supporto-@Mbhere1-26a5e4?style=for-the-badge&logo=telegram)](https://t.me/Mbhere1)
@@ -27,11 +27,11 @@ Film, serie, anime — tutti in italiano, prima possibile.
 
 ## 🎬 Cosa fa
 
-Pezzottio è un addon Stremio che **trova e riproduce film, serie e anime in italiano** senza che tu debba smanettare con niente. Lo installi una volta, scrivi la tua chiave Torbox, e via.
+Pezzottio è un addon Stremio che **trova e riproduce film, serie e anime in italiano** senza che tu debba smanettare con niente. Lo installi una volta, inserisci la tua chiave debrid (Torbox o Real-Debrid; All-Debrid è supportato solo in self-hosting) e via.
 
 - 🇮🇹 **Audio italiano per primo.** Se esiste una versione doppiata, è in cima. Se no, sottotitoli ITA. Tutto il resto dopo.
-- ⚡ **Riproduzione istantanea.** Niente "attesa torrent", niente "loading failed". Con Torbox premi play e parte. Subito.
-- 📺 **Funziona anche senza account.** Stream HTTP italiani (AnimeWorld, AnimeSaturn, GuardaSerie, StreamingCommunity) inclusi gratis. Per il meglio però serve Torbox.
+- ⚡ **Riproduzione istantanea.** Niente "attesa torrent", niente "loading failed". Con un servizio Debrid (Torbox, Real-Debrid o All-Debrid in self-hosting) premi play e parte. Subito.
+- 📺 **Funziona anche senza account.** Stream HTTP italiani (AnimeWorld, AnimeSaturn, GuardaSerie, StreamingCommunity) inclusi gratis. Per il meglio però serve un servizio debrid.
 - 🎯 **Anime, film vecchi, serie introvabili.** Cerca su 30+ fonti contemporaneamente, tutte filtrate per italiano.
 - 📦 **Pack stagione gestiti.** Apri S05E03 da un torrent con 5 stagioni intere: Pezzottio fa partire l'episodio giusto da solo.
 
@@ -68,15 +68,24 @@ Tu apri il link, copi-incolli in Stremio, finito. Funziona uguale su PC, telefon
 ### 1. Apri il link
 ### 👉 [**https://pezz8io.dpdns.org/configure**](https://pezz8io.dpdns.org/configure)
 
-### 2. Metti la chiave Torbox
+### 2. Metti la chiave Debrid (Torbox o Real-Debrid)
 
-Se non hai ancora Torbox, prendilo qui (costa pochi euro al mese, ti permette di scaricare e riprodurre torrent istantaneamente dal cloud, senza saturare la tua connessione):
+Pezzottio supporta **Torbox** e **Real-Debrid** sull'addon pubblico (anche contemporaneamente!).
+
+> [!WARNING]
+> **All-Debrid** è attualmente supportato **solo tramite self-hosting** (auto-ospitando l'addon sul proprio server/PC). Se usi il server pubblico, All-Debrid non funzionerà.
+
+Se non hai ancora un servizio debrid, ti consigliamo **Torbox** (economico e performante):
 
 ### 💎 [**Registrati a Torbox →**](https://torbox.app/subscription?referral=8250a966-1950-4684-973b-cd4e181b56ad)
 
 > Usando il link sopra supporti lo sviluppo di Pezzottio (a te non costa nulla in più). Grazie!
 
-Dopo la registrazione: copia la API key da `torbox.app` → Settings → API Key, incollala su `pezz8io.dpdns.org/configure`.
+Ottieni la tua API Key dal pannello del tuo provider:
+- **Torbox**: `torbox.app` → Settings → API Key
+- **Real-Debrid**: `real-debrid.com/apitoken`
+
+Incolla la chiave nella pagina di configurazione su `pezz8io.dpdns.org/configure`.
 
 ### 3. Installa in Stremio
 
@@ -97,7 +106,16 @@ Apri un film qualsiasi. Vedi gli stream italiani in cima. Premi play. Funziona.
 <details>
 <summary><b>Real-Debrid funziona?</b></summary>
 
-Real-Debrid è **in sviluppo** e attualmente NON consigliato. Real-Debrid ha disabilitato l'API che permetterebbe a Pezzottio di sapere velocemente cosa è disponibile, quindi i risultati sono pochi e lenti. Torbox invece funziona perfettamente: usalo. RD tornerà supportato quando troveremo una soluzione affidabile.
+Sì, Real-Debrid è pienamente supportato. Puoi inserire la tua API key nella pagina di configurazione. Funziona in parallelo o come alternativa a Torbox (contrassegnato dal badge `[RD⚡]`).
+</details>
+
+<details>
+<summary><b>All-Debrid funziona?</b></summary>
+
+Sì, All-Debrid è supportato, ma **attualmente è disponibile solo tramite self-hosting** (auto-ospitato).
+
+> [!WARNING]
+> Se utilizzi l'addon pubblico non potrai configurarlo. Se invece decidi di auto-ospitare la tua copia di Pezzottio (tramite Docker o Node.js), potrai inserire la tua API key di All-Debrid nella pagina di configurazione. Funzionerà in parallelo o come alternativa agli altri provider (contrassegnato dal badge `[AD⚡]`).
 </details>
 
 <details>
@@ -148,6 +166,7 @@ Telegram: [**@Mbhere1**](https://t.me/Mbhere1). Scrivimi descrivendo cosa hai pr
 
 Se vuoi ospitare la tua copia (utile se hai tanti utenti o vuoi privacy massima):
 
+### Tramite Node.js
 ```bash
 git clone https://github.com/ceres777/pezzottio.git
 cd pezzottio
@@ -155,8 +174,20 @@ npm install
 npm start
 ```
 
-Apri `http://127.0.0.1:7001/configure`.
+Apri `http://127.0.0.1:7890/configure`.
 
+### Tramite Docker / Docker Compose
+Pezzottio può essere eseguito facilmente tramite Docker. È presente un file `docker-compose.yml` preconfigurato.
+
+> [!IMPORTANT]
+> Quando si utilizza Docker o un reverse proxy, è **fondamentale** impostare la variabile d'ambiente `PUBLIC_HOST` con l'indirizzo pubblico dell'addon (es. `PUBLIC_HOST=https://tuodominio.org` o `http://192.168.x.x:7890`). Senza questa configurazione, Stremio non riuscirà a riprodurre i contenuti poiché riceverà URL di riproduzione non validi (con IP `0.0.0.0` o `127.0.0.1`).
+
+Avvia il container con:
+```bash
+docker compose up -d --build
+```
+
+### Deploy su Render
 Deploy gratuito su Render: il repo include `render.yaml`. Fork → New Web Service → Deploy.
 
 ---
