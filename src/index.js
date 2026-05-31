@@ -53,6 +53,9 @@ try { _localCache = require('./cache.local'); } catch (_) {}
 if (_localCache && typeof _localCache.setup === 'function') {
   try { _localCache.setup({ app, KNOWN_PATHS }); } catch (_) {}
 }
+if (_ext && typeof _ext.setup === 'function') {
+  try { _ext.setup({ app, KNOWN_PATHS }); } catch (_) {}
+}
 
 // Middleware: se il primo segmento del path è una config base64,
 // decodificala, ricava req.userConfig e riscrivi req.url.
