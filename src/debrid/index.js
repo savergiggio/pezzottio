@@ -1,15 +1,15 @@
 const { getConfig } = require('../config');
 const realdebrid = require('./realdebrid');
 const torbox = require('./torbox');
+const alldebrid = require('./alldebrid');
 
-// Lista di TUTTI i provider configurati. L'utente può avere RD, TB o entrambi —
-// in quest'ultimo caso mostriamo i risultati da entrambe le fonti (così non
-// ne perdiamo nessuna). TB prima perché è più veloce (batch check 1 request).
+// Lista di TUTTI i provider configurati. L'utente può avere RD, TB, AD o tutti e tre.
 function activeProviders() {
   const c = getConfig();
   const out = [];
   if (c.torboxKey) out.push(torbox);
   if (c.realdebridKey) out.push(realdebrid);
+  if (c.alldebridKey) out.push(alldebrid);
   return out;
 }
 
