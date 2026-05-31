@@ -26,22 +26,13 @@ const { getConfig } = require('../config');
 //   - MediaFusion: payload Fernet-encrypted → POST /encrypt-user-data per
 //     ottenere il token cifrato dalla nostra config
 
-// Cache token MediaFusion encrypted per (chiave RD + lang) (TTL 24h).
-// Lang nel key è critico: token con language_sorting:['Italian','English']
-// è diverso da ['English','Italian']. Senza, utenti EN ricevono filtro IT.
+// Cache token MediaFusion encrypted per chiave RD (TTL 24h)
 const _mfTokenCache = new Map();
 const _MF_TTL = 24 * 60 * 60 * 1000;
 async function _getMediaFusionToken(rdKey) {
-  let lang = 'it';
-  try { lang = getConfig().lang || 'it'; } catch (_) {}
-  const cacheKey = `${rdKey}:${lang}`;
-  const cached = _mfTokenCache.get(cacheKey);
+  const cached = _mfTokenCache.get(rdKey);
   if (cached && Date.now() - cached.t < _MF_TTL) return cached.v;
   const host = (process.env.MEDIAFUSION_HOST || 'https://mediafusionfortheweebs.midnightignite.me').replace(/\/$/, '');
-  // Lang-aware sorting: utente IT vuole IT in cima, utente EN vuole EN in cima.
-  const languageSorting = lang === 'en'
-    ? ['English', 'Italian']
-    : ['Italian', 'English'];
   const userData = {
     streaming_provider: { service: 'realdebrid', token: rdKey, enable_watchlist_catalogs: false },
     selected_catalogs: [],
@@ -55,7 +46,7 @@ async function _getMediaFusionToken(rdKey) {
       { key: 'size', direction: 'desc' },
       { key: 'seeders', direction: 'desc' },
     ],
-    language_sorting: languageSorting,
+    language_sorting: ['Italian', 'English'],
     quality_filter: ['CAM'],
     show_full_torrent_name: true,
     mediaflow_config: null,
@@ -65,12 +56,11 @@ async function _getMediaFusionToken(rdKey) {
     api_password: null,
   };
   try {
-    // Timeout 5s (era 3s): la prima call cold dopo pm2 restart può tardare.
     const r = await fetch(`${host}/encrypt-user-data`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_data: userData }),
-      timeout: 5000,
+      timeout: 3000,
     });
     if (!r.ok) {
       console.error(`[external] MediaFusion encrypt-user-data ${r.status}`);
@@ -82,8 +72,8 @@ async function _getMediaFusionToken(rdKey) {
       console.error('[external] MediaFusion encrypt-user-data no token in response');
       return null;
     }
-    _mfTokenCache.set(cacheKey, { v: token, t: Date.now() });
-    console.log(`[external] MediaFusion token caricato per chiave RD ${rdKey.slice(0, 6)}... lang=${lang}`);
+    _mfTokenCache.set(rdKey, { v: token, t: Date.now() });
+    console.log(`[external] MediaFusion token caricato per chiave RD ${rdKey.slice(0, 6)}...`);
     return token;
   } catch (e) {
     console.error('[external] MediaFusion encrypt-user-data err:', e.message);
@@ -92,21 +82,14 @@ async function _getMediaFusionToken(rdKey) {
 }
 
 async function _buildBaseUrl(addon, rdKey) {
-  // Lang switch per-request:
-  // - Torrentio: rimuovo |language=italian quando lang='en'
-  // - Comet / StremThru / Meteor: swap a baseUrlEN (config encoded che
-  //   filtra "en" invece di "it" — necessario perché le loro config B64
-  //   includono required/exclude language hard-coded).
-  // Backward compat: lang='it' default → tutto invariato per utenti IT.
+  // Lang patch: se utente ha lang='en', rimuovi |language=italian dal URL
+  // Torrentio così non filtra i risultati italiani-only. Backward compat:
+  // lang='it' default → URL invariato (resta con language=italian).
   let baseUrl = addon.baseUrl;
   try {
     const lang = getConfig().lang;
-    if (lang === 'en') {
-      if (addon.key === 'torrentio') {
-        baseUrl = baseUrl.replace(/\|language=italian/g, '');
-      } else if (addon.baseUrlEN) {
-        baseUrl = addon.baseUrlEN;
-      }
+    if (lang === 'en' && addon.key === 'torrentio') {
+      baseUrl = baseUrl.replace(/\|language=italian/g, '');
     }
   } catch (_) { /* getConfig non chiamato in test runtime — fallback safe */ }
   if (!rdKey) return baseUrl;
@@ -123,17 +106,16 @@ async function _buildBaseUrl(addon, rdKey) {
       return `${baseUrl}|realdebrid=${rdKey}`;
     }
     if (addon.key === 'comet') {
-      // Uso `baseUrl` (lang-aware: IT o EN) per estrarre+riencodare il config.
-      const m = baseUrl.match(/^(https?:\/\/[^/]+\/)([^/]+)$/);
-      if (!m) return baseUrl;
+      const m = addon.baseUrl.match(/^(https?:\/\/[^/]+\/)([^/]+)$/);
+      if (!m) return addon.baseUrl;
       const cfg = JSON.parse(Buffer.from(m[2], 'base64').toString('utf8'));
       cfg.debridServices = [{ service: 'realdebrid', apiKey: rdKey, hosts: [] }];
       const newB64 = Buffer.from(JSON.stringify(cfg), 'utf8').toString('base64');
       return m[1] + newB64;
     }
     if (addon.key === 'stremthru') {
-      const m = baseUrl.match(/^(.+\/torz\/)([^/]+)$/);
-      if (!m) return baseUrl;
+      const m = addon.baseUrl.match(/^(.+\/torz\/)([^/]+)$/);
+      if (!m) return addon.baseUrl;
       const cfg = JSON.parse(Buffer.from(m[2], 'base64').toString('utf8'));
       cfg.stores = [{ c: 'rd', t: rdKey }];
       const newB64 = Buffer.from(JSON.stringify(cfg), 'utf8').toString('base64');
@@ -141,7 +123,7 @@ async function _buildBaseUrl(addon, rdKey) {
     }
     if (addon.key === 'mediafusion') {
       const token = await _getMediaFusionToken(rdKey);
-      if (!token) return baseUrl; // fallback torrent-only
+      if (!token) return addon.baseUrl; // fallback torrent-only
       const host = (process.env.MEDIAFUSION_HOST || 'https://mediafusionfortheweebs.midnightignite.me').replace(/\/$/, '');
       return `${host}/${token}`;
     }
@@ -149,8 +131,8 @@ async function _buildBaseUrl(addon, rdKey) {
       // Il config base64 ha "debridService":"torrent" e "debridApiKey":"" →
       // restituisce stream torrent-only, nessun tag [RD+]. Sovrascrivo con
       // la chiave RD utente così Meteor pre-filtra i cached server-side.
-      const m = baseUrl.match(/^(.+\/)([^/]+)$/);
-      if (!m) return baseUrl;
+      const m = addon.baseUrl.match(/^(.+\/)([^/]+)$/);
+      if (!m) return addon.baseUrl;
       const cfg = JSON.parse(Buffer.from(m[2], 'base64').toString('utf8'));
       cfg.debridService = 'realdebrid';
       cfg.debridApiKey = rdKey;
@@ -181,21 +163,12 @@ const EXTERNAL_ADDONS = [
     assumeItalian: true,
     enabled: true,
   },
-  // Community-maintained Stremio addons. Out of respect for the upstream
-  // maintainers (Munif, Goldy, Midnight), these are DISABLED by default on a
-  // fresh clone of this repo. The public Pezzottio instance runs its own
-  // Docker containers (StremThru/Comet/MediaFusion — see README) and sets the
-  // env vars below in production. Self-hosters: deploy your own instance of
-  // these upstreams (links in README "Credits / Upstream services"), then set
-  // the matching env var to point at your instance.
-  //
-  // Reference: the previously-hardcoded base64 configs (Italian + English
-  // language filters used by Pezzottio) are documented in the README so you
-  // can rebuild them when configuring your own upstream URL.
+  // Community IT-aware proxy — URL pubblici hardcoded.
+  // Sovrascrivibili via env var se cambiano endpoint.
   {
     key: 'mediafusion',
     label: 'MediaFusion',
-    baseUrl: process.env.MEDIAFUSION_URL || '',
+    baseUrl: process.env.MEDIAFUSION_URL || 'https://mediafusionfortheweebs.midnightignite.me/D--MuTCQ99t0sh23nd3nx2xZCCqMkr4MPwy5I9suo3Ej2tUYTqimnxZBJ34hbNRwoL5AIvPt4N8KPnl50LWHT5YLDcrwnX_dhOq3vHO0aCNKBlnXeki7olZAUDoHepPCTDFLFtZVcZcohYRa83aT2Vbig3W5Qz3qErPqw2Zdb676ioZa452Mb35T0IX-ftQcNF0oGJerUTZhfvv9w4wrEIiW8wx0jdSxAfcrnM6yKFEcYMP-3dRWYAL2wy13Gcvwr2j4ax2z6TQ35xlcW9WWsKjA',
     timeout: 3000,
     assumeItalian: true,
     enabled: true,
@@ -203,8 +176,7 @@ const EXTERNAL_ADDONS = [
   {
     key: 'comet',
     label: 'Comet',
-    baseUrl: process.env.COMET_URL || '',
-    baseUrlEN: process.env.COMET_URL_EN || '',
+    baseUrl: process.env.COMET_URL || 'https://comet.feels.legal/eyJtYXhSZXN1bHRzUGVyUmVzb2x1dGlvbiI6MCwibWF4U2l6ZSI6MCwiY2FjaGVkT25seSI6ZmFsc2UsInNvcnRDYWNoZWRVbmNhY2hlZFRvZ2V0aGVyIjpmYWxzZSwicmVtb3ZlVHJhc2giOnRydWUsInJlc3VsdEZvcm1hdCI6WyJhbGwiXSwiZGVicmlkU2VydmljZXMiOltdLCJlbmFibGVUb3JyZW50Ijp0cnVlLCJkZWR1cGxpY2F0ZVN0cmVhbXMiOmZhbHNlLCJzY3JhcGVEZWJyaWRBY2NvdW50VG9ycmVudHMiOmZhbHNlLCJkZWJyaWRTdHJlYW1Qcm94eVBhc3N3b3JkIjoiIiwibGFuZ3VhZ2VzIjp7InJlcXVpcmVkIjpbIml0Il0sImFsbG93ZWQiOlsibXVsdGkiLCJpdCJdLCJleGNsdWRlIjpbImVuIiwiamEiLCJ6aCIsInJ1IiwiYXIiLCJwdCIsImVzIiwiZnIiLCJkZSIsImtvIiwiaGkiLCJibiIsInBhIiwibXIiLCJndSIsInRhIiwidGUiLCJrbiIsIm1sIiwidGgiLCJ2aSIsImlkIiwidHIiLCJoZSIsImZhIiwidWsiLCJlbCIsImx0IiwibHYiLCJldCIsInBsIiwiY3MiLCJzayIsImh1Iiwicm8iLCJiZyIsInNyIiwiaHIiLCJzbCIsIm5sIiwiZGEiLCJmaSIsInN2Iiwibm8iLCJtcyIsImxhIl0sInByZWZlcnJlZCI6WyJpdCJdfSwicmVzb2x1dGlvbnMiOnsicjI0MHAiOmZhbHNlfSwib3B0aW9ucyI6eyJyZW1vdmVfcmFua3NfdW5kZXIiOi0xMDAwMDAwMDAwLCJhbGxvd19lbmdsaXNoX2luX2xhbmd1YWdlcyI6ZmFsc2UsInJlbW92ZV91bmtub3duX2xhbmd1YWdlcyI6ZmFsc2V9fQ==',
     timeout: 3000,
     assumeItalian: true,
     enabled: true,
@@ -212,8 +184,7 @@ const EXTERNAL_ADDONS = [
   {
     key: 'stremthru',
     label: 'StremThru',
-    baseUrl: process.env.STREMTHRU_URL || '',
-    baseUrlEN: process.env.STREMTHRU_URL_EN || '',
+    baseUrl: process.env.STREMTHRU_URL || 'https://stremthru.13377001.xyz/stremio/torz/eyJpbmRleGVycyI6bnVsbCwic3RvcmVzIjpbeyJjIjoicDJwIiwidCI6IiJ9XSwiZmlsdGVyIjoiXCJpdFwiIGluIExhbmd1YWdlcyBcdTAwMjZcdTAwMjYgUXVhbGl0eSAhPSBcIkNBTVwiIn0=',
     timeout: 3000,
     assumeItalian: true,
     enabled: true,
@@ -221,29 +192,17 @@ const EXTERNAL_ADDONS = [
   {
     key: 'meteor',
     label: 'Meteor',
-    baseUrl: process.env.METEOR_URL || '',
-    baseUrlEN: process.env.METEOR_URL_EN || '',
+    baseUrl: process.env.METEOR_URL || 'https://meteorfortheweebs.midnightignite.me/eyJkZWJyaWRTZXJ2aWNlIjoidG9ycmVudCIsImRlYnJpZEFwaUtleSI6IiIsImNhY2hlZE9ubHkiOnRydWUsImVuYWJsZVlvdXJNZWRpYSI6ZmFsc2UsInlvdXJNZWRpYUxlZ2FjeU1vZGUiOmZhbHNlLCJzaG93WW91ck1lZGlhU3RyZWFtcyI6ZmFsc2UsInlvdXJNZWRpYVNvdXJjZXMiOlsidG9ycmVudCJdLCJyZW1vdmVUcmFzaCI6ZmFsc2UsInJlbW92ZVNhbXBsZXMiOmZhbHNlLCJyZW1vdmVBZHVsdCI6ZmFsc2UsImV4Y2x1ZGUzRCI6ZmFsc2UsImVuYWJsZVNlYURleCI6ZmFsc2UsImVuYWJsZVVzZW5ldCI6ZmFsc2UsInVzZW5ldEN1c3RvbUVuZ2luZXMiOmZhbHNlLCJtaW5TZWVkZXJzIjowLCJtYXhSZXN1bHRzIjowLCJtYXhSZXN1bHRzUGVyUmVzIjowLCJtYXhTaXplIjowLCJyZXNvbHV0aW9ucyI6W10sImxhbmd1YWdlcyI6eyJwcmVmZXJyZWQiOlsibXVsdGkiLCJpdCJdLCJyZXF1aXJlZCI6WyJpdCIsIm11bHRpIl0sImV4Y2x1ZGUiOltdfSwicmVzdWx0Rm9ybWF0IjpbInRpdGxlIiwicXVhbGl0eSIsInNpemUiLCJhdWRpbyJdLCJzb3J0T3JkZXIiOlsicGFjayIsImNhY2hlZCIsInlvdXJtZWRpYSIsInNlYWRleCIsInJlc29sdXRpb24iLCJzaXplIiwicXVhbGl0eSIsInNlZWRlcnMiLCJsYW5ndWFnZSIsInR5cGUiXX0',
     timeout: 3000,
     assumeItalian: true,
     enabled: true,
   },
 ];
 
-// Startup log: shows operators which upstream addons are wired up and which
-// are skipped (no env var = disabled by default — see comment above).
-const _activeAddons = EXTERNAL_ADDONS.filter((a) => a.enabled && a.baseUrl).map((a) => a.label);
-const _inactiveAddons = EXTERNAL_ADDONS.filter((a) => a.enabled && !a.baseUrl).map((a) => a.label);
-console.log(`[external] active: ${_activeAddons.join(', ') || '(none)'}${_inactiveAddons.length ? ` | disabled (set env var to enable): ${_inactiveAddons.join(', ')}` : ''}`);
-
 // === PROTEZIONE: cache + circuit breaker + in-flight dedup ===
-// TTL 30 min (era 10): con 300 utenti che cercano gli stessi titoli popolari,
-// triplichiamo la finestra di cache hit → ~3x meno hit upstream → meno 429.
-const CACHE_TTL = 30 * 60 * 1000;
+const CACHE_TTL = 10 * 60 * 1000;
 const BREAKER_THRESHOLD = 3;
 const BREAKER_COOLDOWN = 5 * 60 * 1000;
-// 429 (rate limit) è cooldown immediato e più lungo: l'upstream ci sta dicendo
-// "fermati subito o ti blocco di più". 10 min e 1 errore basta per attivarlo.
-const RATELIMIT_COOLDOWN = 10 * 60 * 1000;
 
 const _cache = new Map();
 const _breaker = new Map();
@@ -315,16 +274,8 @@ async function _fetchAddon(addon, type, id) {
       clearTimeout(timeoutId);
       const ms = Date.now() - t0;
       if (!res.ok) {
-        // 429 = rate limit → cooldown immediato 10min (no soglia 3 errori).
-        // Continuare a sbattere genera blacklist più dure.
-        if (res.status === 429) {
-          _breaker.set(addon.key, { errors: 0, until: Date.now() + RATELIMIT_COOLDOWN });
-          _bump(addon.key, 'err');
-          console.error(`[external] ${addon.label} ${type}/${id} → 429 — cooldown 10min`);
-        } else {
-          _recordError(addon.key, addon.label, addon.breakerThreshold);
-          console.error(`[external] ${addon.label} ${type}/${id} → ${res.status} (${ms}ms)`);
-        }
+        _recordError(addon.key, addon.label, addon.breakerThreshold);
+        console.error(`[external] ${addon.label} ${type}/${id} → ${res.status} (${ms}ms)`);
         return [];
       }
       _recordSuccess(addon.key);
