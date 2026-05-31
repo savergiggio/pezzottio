@@ -18,11 +18,6 @@ const { findFileForEpisode } = require('./parse');
 
 const PUBLIC_HOST = process.env.PUBLIC_HOST || 'https://pezz8io.dpdns.org';
 
-// Estensione locale opzionale (assente nel repo): se presente, può estendere
-// manifest e gestire risorse aggiuntive. Carica in modo silenzioso.
-let ext = null;
-try { ext = require('./providers/ext.local'); } catch (_) { ext = null; }
-
 // Generi Kitsu (selezione: i più usati). Permette filter dropdown in Stremio.
 const KITSU_GENRES = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Sci-Fi', 'Mystery', 'Magic',
@@ -36,7 +31,7 @@ const manifest = {
   id: 'org.pezzottio.addon',
   version: require('../package.json').version,
   name: 'PEZZOTTIO',
-  description: 'Film, serie e anime con audio italiano sempre in cima. 30+ fonti, Real-Debrid & Torbox, proxy HLS integrato (niente Docker/VPS). Cataloghi Netflix, Prime, Disney+, Sky e altri nel Discover. Setup in 30s. 💬 Discord: https://discord.gg/Tpv3WMe77k',
+  description: 'Lo streaming italiano senza menate. Cerca film, serie e anime su 30+ tracker e mette sempre in cima l\'audio italiano. Integrazione con Torbox per riproduzione istantanea. Proxy HLS integrato server-side: niente MediaFlowProxy, niente Docker, niente VPS da configurare. Setup in 30 secondi.',
   logo: `${PUBLIC_HOST}/logo.png`,
   background: `${PUBLIC_HOST}/background.png`,
   resources: ['stream', 'catalog', 'meta'],
@@ -117,15 +112,10 @@ const manifest = {
   },
 };
 
-// L'estensione locale può aggiungere type/idPrefix al manifest base.
-try { if (ext && ext.init) ext.init(manifest); } catch (_) {}
-
 const builder = new addonBuilder(manifest);
 
 builder.defineStreamHandler(async ({ type, id }) => {
   try {
-    if (ext && ext.stream) { const r = await ext.stream({ type, id }); if (r) return r; }
-
     const meta = await resolveTitle(type, id);
     // Stremio id completo (tt0903747:1:1 / kitsu:45398:1 / tmdb:30983:1:1 ecc.) —
     // serve agli addon esterni che capiscono i loro formati nativi.
@@ -209,11 +199,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
       slugsPromise,
     ]);
 
-    // Priorità: 1) publicHost iniettato per-request dal middleware (req-based),
-    // 2) PUBLIC_HOST env (legacy), 3) fallback localhost:port (dev locale).
-    const publicHost = getConfig().publicHost
-      || process.env.PUBLIC_HOST
-      || `http://${getConfig().host}:${getConfig().port}`;
+    const publicHost = process.env.PUBLIC_HOST || `http://${getConfig().host}:${getConfig().port}`;
     const httpStreams = [];
 
     // === LAZY HTTP STREAMS (anime) ===
@@ -443,13 +429,8 @@ builder.defineStreamHandler(async ({ type, id }) => {
     // Rimuove i tag [Provider] ridondanti dal nome (compaiono già in ⚙️)
     const PROVIDER_BRACKETS_RE = /\s*\[(TPB|YTS|EZTV|Nyaa|Knaben|Solid|BS|CSR|MediaFusion|Comet|StremThru|Torrentio)\]\s*/gi;
 
-    // Costruisco la prima riga del title: lang-aware.
-    // - lang='it' (default): preferisce italianTitle (es. "Cinquanta sfumature di grigio")
-    // - lang='en' / 'mixed': preferisce il titolo originale/inglese (es. "Fifty Shades of Grey")
-    // Backward-compat: utenti IT esistenti vedono esattamente come prima.
-    const displayTitle = lang === 'en'
-      ? (meta.title || meta.italianTitle)
-      : (meta.italianTitle || meta.title);
+    // Costruisco la prima riga del title: titolo italiano + (anno) o + S/E
+    const displayTitle = meta.italianTitle || meta.title;
     function buildTitleHeader() {
       if (type === 'series' && meta.season && meta.episode) {
         const s = String(meta.season).padStart(2, '0');
@@ -476,6 +457,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
     function svcFromLabel(label) {
       if (label === 'TB') return 'torbox';
       if (label === 'RD') return 'realdebrid';
+      if (label === 'AD') return 'alldebrid';
       return 'p2p';
     }
     function langsArr(t) {
@@ -535,38 +517,12 @@ builder.defineStreamHandler(async ({ type, id }) => {
           ? `Pezzottio ${provLabel}\n📺 ${qualityLabel}`
           : `Pezzottio\n📺 ${qualityLabel}`;
         const lines = [titleHeader];
-        // Filename: quando lo stream è debrid (url set) devo differenziare
-        // le N varianti, altrimenti tutti i candidati hanno stesso (name,title)
-        // e Stremio li dedupplica → utente vede 0 stream. Per i torrent P2P
-        // puri (senza url) lascio invariato per backward compat IT.
-        const rawFilename = t.filename || t.title || '';
-        // Rimuovo il tag "[Torrentio]" / "[Comet]" finale aggiunto da external.js
-        const cleanFn = rawFilename.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
-        const headerFirstLine = titleHeader.split('\n')[0];
-        if (url && cleanFn && cleanFn !== headerFirstLine) {
-          // Tronco a ~90 char per non sfondare il layout Stremio
-          const fn = cleanFn.length > 90 ? cleanFn.slice(0, 87) + '...' : cleanFn;
-          lines.push(fn);
-        }
         if (lang === 'en') {
           if (t.english) lines.push('🇺🇸  Audio ENG');
-          else if (t.englishSub) lines.push('🇬🇧  SUB ENG');
-          // Default per EN: se non c'è marker italian esplicito, presumiamo
-          // audio EN (la maggior parte dei torrent per film/serie USA non
-          // tagga "english" perché è implicito — solo "ITA" viene marcato
-          // esplicitamente nelle release internazionali).
-          else if (!t.italian && !t.italianSub) lines.push('🇺🇸  Audio ENG');
+          else if (t.englishSub) lines.push('📝  SUB ENG');
         } else {
           if (t.italian) lines.push('🇮🇹  Audio ITA');
           else if (t.italianSub) lines.push('📝  SUB ITA');
-        }
-        // Riga meta per stream debrid: 💾 size · 👥 seeds · 🗂 source
-        if (url) {
-          const metaParts = [];
-          if (t.sizeText) metaParts.push(`💾 ${t.sizeText}`);
-          if (typeof t.seeds === 'number' && t.seeds > 0) metaParts.push(`👥 ${t.seeds}`);
-          if (t.provider) metaParts.push(`🗂 ${t.provider}`);
-          if (metaParts.length) lines.push(metaParts.join(' · '));
         }
         title = lines.join('\n');
       }
@@ -598,7 +554,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
           addonName: 'Pezzottio', service: 'http', quality: s.quality || 'Direct',
         });
         title = aiosFormatter.formatTitle({
-          title: displayTitle,
+          title: meta.italianTitle || meta.title,
           language: langSingle,
           source: providerFull,
         });
@@ -616,7 +572,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
           ? ` S${String(meta.season).padStart(2,'0')}E${String(meta.episode).padStart(2,'0')}`
           : '';
         const fileLine = realFilename
-          || `${displayTitle}${epSuffix} · ${providerFull}`;
+          || `${meta.italianTitle || meta.title}${epSuffix} · ${providerFull}`;
         title = torrentioFormatter.formatTitle({
           filename: fileLine,
           languages: langsArr(s),
@@ -626,9 +582,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
         const lines = [titleHeader];
         if (lang === 'en') {
           if (s.english) lines.push('🇺🇸  Audio ENG');
-          else if (s.englishSub) lines.push('🇬🇧  SUB ENG');
-          // Default per EN: presumiamo audio EN se nessun marker italian.
-          else if (!s.italian && !s.italianSub) lines.push('🇺🇸  Audio ENG');
+          else if (s.englishSub) lines.push('📝  SUB ENG');
         } else {
           if (s.italian) lines.push('🇮🇹  Audio ITA');
           else if (s.italianSub) lines.push('📝  SUB ITA');
@@ -681,74 +635,23 @@ builder.defineStreamHandler(async ({ type, id }) => {
     // publicHost già dichiarato in cima al handler (per gli HTTP stream URL)
 
     // Resolver per Torbox: batch checkcached (1 request) → URL lazy /play.
-    // Pool combinato:
-    //   1) candidates raccolti da searchExternal + scraper interni → checkCachedBatch TB
-    //   2) ICV (italo-centrico) con debrid=tb → torrent pre-flaggati cached_tb da ICV
-    //      (saltiamo il check live perché ICV già lo fa server-side, refresh frequente).
     async function resolveTorbox(prov) {
       const hashes = candidates.map((c) => c.infoHash);
-      // Pool 1 + Pool 2 in parallelo per ridurre latency.
-      const [cachedMap, icvCached] = await Promise.all([
-        prov.checkCachedBatch(hashes).catch(() => new Map()),
-        (async () => {
-          if (!imdbId) return [];
-          try {
-            const sc = require('./providers/streamingcommunity');
-            const tmdbId = await Promise.race([
-              sc.imdbToTmdb(imdbId, isMovie ? 'movie' : 'tv').catch(() => null),
-              new Promise((r) => setTimeout(() => r(null), 1500)),
-            ]);
-            if (!tmdbId) return [];
-            const rdMod = require('./debrid/realdebrid');
-            return await Promise.race([
-              rdMod.findCachedByTmdb(tmdbId, meta.season, meta.episode, isMovie, 'tb').catch(() => []),
-              new Promise((r) => setTimeout(() => r([]), 2000)),
-            ]);
-          } catch (_) { return []; }
-        })(),
-      ]);
-      console.log(`[TB] external-cached=${[...cachedMap.values()].filter(Boolean).length} icv-cached=${icvCached.length}`);
-
+      const cachedMap = await prov.checkCachedBatch(hashes).catch(() => new Map());
       const out = [];
-      const seenHashes = new Set();
-
-      // Pool 1: candidates verificati live con TB checkCachedBatch.
       for (const c of candidates) {
         if (out.length >= maxResults) break;
         const cached = cachedMap.get(c.infoHash);
         if (!cached) continue;
         if (c.seasonPack && meta.season && meta.episode) {
+          // Per anime via Kitsu (season=1, episode=absolute), passa anche meta.episode
+          // come absoluteEpisode → match pattern "One Piece - 1163.mkv" nei pack.
           const absFallback = (isAnime && (meta.season == null || meta.season <= 1)) ? meta.episode : meta.absoluteEpisode;
           const fileMatch = findFileForEpisode(cached.files || [], meta.season, meta.episode, absFallback);
           if (!fileMatch) continue;
         }
-        seenHashes.add(c.infoHash);
         const url = `${publicHost}/${cfgB64}/play/${c.infoHash}${sePart}${iPart}`;
         out.push(formatStream(c, prov.name, url));
-      }
-
-      // Pool 2: ICV cached_tb (skip se l'hash è già stato emesso dal pool 1).
-      for (const ic of icvCached) {
-        if (out.length >= maxResults) break;
-        if (seenHashes.has(ic.hash)) continue;
-        seenHashes.add(ic.hash);
-        const text = `${ic.title || ''} ${(ic.file && ic.file.title) || ''}`;
-        const candidateLike = {
-          title: ic.title || '',
-          infoHash: ic.hash,
-          magnet: ic.magnet,
-          seeds: ic.seeders || 0,
-          sizeText: null,
-          quality: parseQuality(text),
-          provider: 'ICV',
-          italian: isItalian(text),
-          italianSub: hasItalianSub(text),
-          english: isEnglish(text),
-          englishSub: hasEnglishSub(text),
-          filename: (ic.file && ic.file.title) || null,
-        };
-        const url = `${publicHost}/${cfgB64}/play/${ic.hash}${sePart}${iPart}`;
-        out.push(formatStream(candidateLike, prov.name, url));
       }
       return out;
     }
@@ -818,9 +721,7 @@ builder.defineStreamHandler(async ({ type, id }) => {
         'udp://tracker.torrent.eu.org:451/announce',
       ];
       const out = [];
-      // Ordino per tier (IT o EN a seconda di lang) + qualità.
-      // Detection lang-aware: detecto ENTRAMBI per popolare i flag che servono
-      // a formatStream (label '🇺🇸 ENG' / '🇮🇹 ITA' + fallback default).
+      // Ordino per ITA tier + qualità: audio ITA > sub ITA > altro
       const enriched = cached.map((c) => {
         const text = `${c.title || ''} ${(c.file && c.file.title) || ''}`;
         return {
@@ -828,26 +729,18 @@ builder.defineStreamHandler(async ({ type, id }) => {
           _text: text,
           _italian: isItalian(text),
           _italianSub: hasItalianSub(text),
-          _english: isEnglish(text),
-          _englishSub: hasEnglishSub(text),
           _quality: parseQuality(text),
         };
       });
-      // Lang IT (default): audio ITA > sub ITA > resto.
-      // Lang EN: audio EN > sub EN > resto.
-      const tier = lang === 'en'
-        ? (c) => (c._english ? 0 : c._englishSub ? 1 : 2)
-        : (c) => (c._italian ? 0 : c._italianSub ? 1 : 2);
+      const tier = (c) => (c._italian ? 0 : c._italianSub ? 1 : 2);
       const QR = { '4K': 5, '1080p': 4, '720p': 3, '480p': 2, CAM: 1 };
       enriched.sort((a, b) => {
         const td = tier(a) - tier(b);
         if (td !== 0) return td;
         return (QR[b._quality] || 0) - (QR[a._quality] || 0);
       });
-      // Full-lang filter: esclude release senza marker della lingua scelta.
-      // fullIta è il toggle esistente IT — per EN per ora lasciamo passare tutto
-      // (la maggior parte dei torrent USA non ha marker "english" esplicito).
-      const pool = (lang !== 'en' && fullIta) ? enriched.filter((c) => c._italian) : enriched;
+      // Full ITA filter: esclude release senza marker italiano
+      const pool = fullIta ? enriched.filter((c) => c._italian) : enriched;
       for (const c of pool) {
         if (out.length >= maxResults) break;
         const fi = (c.file && c.file.file_index != null) ? c.file.file_index : '';
@@ -869,8 +762,6 @@ builder.defineStreamHandler(async ({ type, id }) => {
           seeds: c.seeders,
           italian: c._italian,
           italianSub: c._italianSub,
-          english: c._english,
-          englishSub: c._englishSub,
           quality: c._quality,
           seasonPack: c.isPack,
           trackers: TRACKERS,
@@ -919,77 +810,35 @@ builder.defineStreamHandler(async ({ type, id }) => {
       return out;
     }
 
-    // Chiamo TUTTI i provider configurati in parallelo e fondo i risultati.
-    // L'utente che ha sia RD che TB vede risultati da entrambi.
-    console.log(`[debug] providers configured: ${providers.map((p) => p.name).join(',') || '(none)'}`);
-
-    // Resolver RD dai candidates già marcati rdCached=true dagli external addons
-    // (Torrentio/Comet/MediaFusion/StremThru/Meteor che fanno cache check RD nativo
-    // via key RD iniettata upstream). Lang-neutral: il pool `candidates` è già
-    // filtrato per lingua a monte (_buildBaseUrl usa baseUrlEN se lang='en'), quindi
-    // i flag italian/english su ogni candidato sono coerenti col profilo.
-    // Per IT + fullIta: tiene solo i candidati con audio ITA confermato.
-    function resolveRealDebridFromCandidates() {
+    async function resolveAllDebrid(prov) {
+      const hashes = candidates.map((c) => c.infoHash);
+      const cachedMap = await prov.checkCachedBatch(hashes).catch(() => new Map());
       const out = [];
-      const pool = (lang !== 'en' && fullIta)
-        ? candidates.filter((c) => c.italian)
-        : candidates;
-      for (const c of pool) {
+      for (const c of candidates) {
         if (out.length >= maxResults) break;
-        if (!c.rdCached) continue;
+        const cached = cachedMap.get(c.infoHash);
+        if (!cached) continue;
+        // AD /instant non espone la lista file in checkCachedBatch.
+        // Deleghiamo la selezione del file (tramite findFileForEpisode)
+        // al momento della risoluzione reale nel provider (getStreamUrl).
         const q = new URLSearchParams();
         if (meta.season) q.set('s', String(meta.season));
         if (meta.episode) q.set('e', String(meta.episode));
-        q.set('p', 'rd');
+        q.set('p', 'ad');
         if (imdbId) q.set('i', imdbId);
         const url = `${publicHost}/${cfgB64}/play/${c.infoHash}?${q.toString()}`;
-        out.push(formatStream(c, 'RD', url));
+        out.push(formatStream(c, prov.name, url));
       }
-      console.log(`[RD cand] ${imdbId || '?'} lang=${lang} candidates ${candidates.length} → rdCached ${out.length}`);
       return out;
     }
 
-    // Estrae l'infoHash dall'URL /play/<hash>?... per dedup cross-pool.
-    function _hashFromPlayUrl(u) {
-      const m = String(u || '').match(/\/play\/([a-z0-9]{32,40})\b/i);
-      return m ? m[1].toLowerCase() : null;
-    }
-    // Fonde pool ICV + pool candidates dedup-ando per hash. ICV ha priorità
-    // (file_index/rd_link_index pre-mappati → playback pack più affidabile),
-    // i candidates aggiungono solo gli hash che ICV non aveva.
-    function mergeRdPools(icvStreams, candidateStreams) {
-      const seen = new Set();
-      const merged = [];
-      for (const s of icvStreams) {
-        const h = _hashFromPlayUrl(s.url);
-        if (h) seen.add(h);
-        merged.push(s);
-      }
-      for (const s of candidateStreams) {
-        const h = _hashFromPlayUrl(s.url);
-        if (h && seen.has(h)) continue;
-        if (h) seen.add(h);
-        merged.push(s);
-      }
-      return merged;
-    }
-
+    // Chiamo TUTTI i provider configurati in parallelo e fondo i risultati.
+    // L'utente che ha sia RD che TB vede risultati da entrambi.
+    console.log(`[debug] providers configured: ${providers.map((p) => p.name).join(',') || '(none)'}`);
     const providerResults = await Promise.all(providers.map((prov) => {
       if (prov.name === 'TB') return resolveTorbox(prov).catch((e) => { console.error('[TB] resolve threw:', e.message); return []; });
-      if (prov.name === 'RD') {
-        // Sia IT che EN: fonde ICV (italo-centrico, file_index pre-mappato) +
-        // candidates.rdCached (StremThru/Comet/MediaFusion self-hostati + Torrentio).
-        // Prima IT usava SOLO ICV → buco di copertura sui titoli che ICV non ha.
-        // Ora simmetrico con EN: ICV first (più affidabile), candidates riempiono i gap.
-        return Promise.all([
-          resolveRealDebrid(prov).catch((e) => { console.error('[RD icv] threw:', e.message); return []; }),
-          Promise.resolve(resolveRealDebridFromCandidates()),
-        ]).then(([fromIcv, fromCandidates]) => {
-          const merged = mergeRdPools(fromIcv, fromCandidates);
-          console.log(`[RD merge] ${imdbId || '?'} lang=${lang} icv=${fromIcv.length} candidates=${fromCandidates.length} merged=${merged.length}`);
-          return merged;
-        });
-      }
+      if (prov.name === 'RD') return resolveRealDebrid(prov).catch((e) => { console.error('[RD] resolve threw:', e.message, '\n', e.stack); return []; });
+      if (prov.name === 'AD') return resolveAllDebrid(prov).catch((e) => { console.error('[AD] resolve threw:', e.message); return []; });
       return Promise.resolve([]);
     }));
 
@@ -1046,8 +895,6 @@ builder.defineCatalogHandler(async ({ type, id, extra }) => {
     const genre = extra?.genre || null;
     const search = extra?.search || null;
 
-    if (ext && ext.catalog) { const r = await ext.catalog({ type, id, extra }); if (r) return r; }
-
     let metas = [];
     const isSearch = id.startsWith('pezzottio-anime-search');
     if (isSearch) {
@@ -1086,8 +933,6 @@ builder.defineCatalogHandler(async ({ type, id, extra }) => {
 // Additive — non cambia il behavior IT (cinemeta italiano risolve uguale).
 builder.defineMetaHandler(async ({ type, id }) => {
   try {
-    if (ext && ext.meta) { const r = await ext.meta({ type, id }); if (r) return r; }
-
     if (id && id.startsWith('kitsu:')) {
       const data = await kitsu.getMeta(type, id);
       if (data && data.meta) {

@@ -3,12 +3,8 @@ const fetch = require('node-fetch');
 const { getRouter } = require('stremio-addon-sdk');
 const addonInterface = require('./addon');
 const { getConfig, runWithConfig, decodeConfig } = require('./config');
-// Estensione locale opzionale (assente nel repo).
-let _ext = null;
-try { _ext = require('./providers/ext.local'); } catch (_) { _ext = null; }
 const configurePage = require('./pages/configure');
 const configurePageEN = require('./pages/configure-en');
-const legalPage = require('./pages/legal');
 
 const app = express();
 app.use(express.json({ limit: '64kb' }));
@@ -42,7 +38,7 @@ function publicBase(req) {
 
 // Path noti del SDK / app che NON sono config codificate.
 const KNOWN_PATHS = new Set([
-  'configure', 'configure-en', 'api', 'debug', 'play', 'hls', 'hls2', 'dl', 'resolve', 'extra', 'extra-en', 'donate', 'legal', 'manifest.json', 'stream', 'meta', 'catalog', 'subtitles',
+  'configure', 'configure-en', 'api', 'debug', 'play', 'hls', 'hls2', 'dl', 'resolve', 'extra', 'extra-en', 'donate', 'manifest.json', 'stream', 'meta', 'catalog', 'subtitles',
   'logo.png', 'logo.svg', 'background.png', 'background.svg', 'pezzottio-logo.png',
   'changelog',
 ]);
@@ -52,9 +48,6 @@ let _localCache = null;
 try { _localCache = require('./cache.local'); } catch (_) {}
 if (_localCache && typeof _localCache.setup === 'function') {
   try { _localCache.setup({ app, KNOWN_PATHS }); } catch (_) {}
-}
-if (_ext && typeof _ext.setup === 'function') {
-  try { _ext.setup({ app, KNOWN_PATHS }); } catch (_) {}
 }
 
 // Middleware: se il primo segmento del path è una config base64,
@@ -86,6 +79,7 @@ app.get('/configure', (req, res) => {
       base: publicBase(req),
       rd: req.userConfig.rd || '',
       tb: req.userConfig.tb || '',
+      ad: req.userConfig.ad || '',
       order: req.userConfig.order || 'smart',
       aios: req.userConfig.aios === true || req.userConfig.aios === 'true',
       style: req.userConfig.style || null,
@@ -109,6 +103,7 @@ app.get('/configure-en', (req, res) => {
       base: publicBase(req),
       rd: req.userConfig.rd || '',
       tb: req.userConfig.tb || '',
+      ad: req.userConfig.ad || '',
       order: req.userConfig.order || 'smart',
       aios: req.userConfig.aios === true || req.userConfig.aios === 'true',
       style: req.userConfig.style || null,
@@ -119,12 +114,6 @@ app.get('/configure-en', (req, res) => {
       httpAnime: !(req.userConfig.httpAnime === false || req.userConfig.httpAnime === 'false'),
     })
   );
-});
-
-// /legal — disclaimer legale bilingue (EN + IT). Pagina statica HTML,
-// raggiungibile dai footer di /configure e /configure-en.
-app.get('/legal', (req, res) => {
-  res.type('html').setHeader('Cache-Control', 'public, max-age=3600').send(legalPage.render());
 });
 
 // --- Test live delle API key (no salvataggio server-side) ---
@@ -160,6 +149,24 @@ async function testTorbox(key) {
     const u = body?.data || {};
     const plan = u.plan ? `plan ${u.plan}` : 'account attivo';
     return { ok: true, message: `${u.email || 'utente'} · ${plan}` };
+  } catch (e) {
+    return { ok: false, message: 'Connessione fallita: ' + e.message };
+  }
+}
+
+async function testAllDebrid(key) {
+  if (!key) return { ok: false, message: '', empty: true };
+  try {
+    const r = await fetch(`https://api.alldebrid.com/v4/user?agent=pezzottio&apikey=${key}`, {
+      timeout: 8000,
+    });
+    if (r.status === 401 || r.status === 403) return { ok: false, message: 'Token non valido' };
+    if (!r.ok) return { ok: false, message: `Errore AD (${r.status})` };
+    const body = await r.json();
+    if (body.status === 'error') return { ok: false, message: body.error?.message || 'Token non valido' };
+    const u = body?.data?.user || {};
+    const prem = u.isPremium ? `premium` : 'account free';
+    return { ok: true, message: `${u.username || 'utente'} · ${prem}` };
   } catch (e) {
     return { ok: false, message: 'Connessione fallita: ' + e.message };
   }
@@ -516,8 +523,7 @@ app.get('/resolve/:prov/:slugEnc/:episode', async (req, res) => {
       return res.status(404).send('stream not found');
     }
     console.log(`[resolve] ${prov} ${slug} ep${episode} -> ${r.url.slice(0, 80)} (${Date.now() - t0}ms)`);
-    // 302 secco senza body per evitare HTTP/2 framing errors via CF tunnel.
-    return res.set('Location', r.url).status(302).end();
+    return res.redirect(302, r.url);
   } catch (e) {
     console.error('[resolve]', prov, e.message);
     return res.status(502).send('resolve failed');
@@ -533,7 +539,7 @@ app.get('/play/:hash', async (req, res) => {
   const hash = String(req.params.hash || '').toLowerCase();
   const season = req.query.s ? Number(req.query.s) : null;
   const episode = req.query.e ? Number(req.query.e) : null;
-  const wantedProvider = (req.query.p || '').toLowerCase(); // 'tb' o 'rd'
+  const wantedProvider = (req.query.p || '').toLowerCase(); // 'tb', 'rd' o 'ad'
   const seTag = season && episode ? ` S${season}E${episode}` : '';
   const ua = (req.headers['user-agent'] || '').slice(0, 60);
 
@@ -541,17 +547,23 @@ app.get('/play/:hash', async (req, res) => {
   // Provider selection:
   // - ?p=tb esplicito → TB (404 se no key TB)
   // - ?p=rd esplicito → RD (404 se no key RD)
-  // - default (no ?p): TB se presente, altrimenti RD se presente
-  let useTb = false, useRd = false;
+  // - ?p=ad esplicito → AD (404 se no key AD)
+  // - default (no ?p): TB se presente, altrimenti RD se presente, altrimenti AD
+  let useTb = false, useRd = false, useAd = false;
   if (wantedProvider === 'tb') useTb = !!user.tb;
   else if (wantedProvider === 'rd') useRd = !!user.rd;
-  else { useTb = !!user.tb; useRd = !useTb && !!user.rd; }
+  else if (wantedProvider === 'ad') useAd = !!user.ad;
+  else {
+    useTb = !!user.tb;
+    useRd = !useTb && !!user.rd;
+    useAd = !useTb && !useRd && !!user.ad;
+  }
 
-  if (!useRd && !useTb) {
+  if (!useRd && !useTb && !useAd) {
     console.log(`[play] NO_KEY ${hash.slice(0, 8)} wantedP=${wantedProvider || 'none'}`);
     return res.status(404).send('Nessuna chiave debrid configurata');
   }
-  const provName = useTb ? 'TB' : 'RD';
+  const provName = useTb ? 'TB' : (useRd ? 'RD' : 'AD');
   console.log(`[play] start ${hash.slice(0, 8)}${seTag} via ${provName} UA=${ua}`);
 
   const { runWithConfig } = require('./config');
@@ -582,12 +594,18 @@ app.get('/play/:hash', async (req, res) => {
             url = await rd.getStreamUrl(hash, magnet, season, episode);
           }
         }
-      } else {
+      } else if (useTb) {
         // TB: createtorrent + redirect 302 (pattern Torrentio).
         const TR = 'tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.torrent.eu.org:451/announce';
         const magnet = `magnet:?xt=urn:btih:${hash}&${TR}`;
         const tb = require('./debrid/torbox');
         url = await tb.getStreamUrl(hash, magnet, season, episode);
+      } else if (useAd) {
+        // AD: upload magnet + status polling
+        const TR = 'tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.openbittorrent.com:6969/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.torrent.eu.org:451/announce';
+        const magnet = `magnet:?xt=urn:btih:${hash}&${TR}`;
+        const ad = require('./debrid/alldebrid');
+        url = await ad.getStreamUrl(hash, magnet, season, episode);
       }
 
       const ms = Date.now() - start;
@@ -603,12 +621,7 @@ app.get('/play/:hash', async (req, res) => {
       // direttamente i Content-Type non standard di RD CDN.
       // /dl endpoint resta come fallback (non più usato di default).
       console.log(`[play] OK ${hash.slice(0, 8)}${seTag} via ${provName} (${ms}ms)`);
-      // 302 "secco" senza body (Content-Length: 0). Express res.redirect()
-      // emette HTML "Found. Redirecting to ..." con Content-Type: text/html;
-      // su CF tunnel + HTTP/2 client questo provoca "Error in the HTTP2
-      // framing layer" → Stremio mostra "loading failed". Mandando solo
-      // Location + 302 + body vuoto il framing resta pulito.
-      res.set('Location', url).status(302).end();
+      res.redirect(302, url);
 
       // === FIRE-AND-FORGET dopo il redirect ===
       // Auto-prefetch del prossimo episodio in TB se serie + opt-in.
@@ -652,9 +665,9 @@ app.get('/play/:hash', async (req, res) => {
 });
 
 app.post('/api/test', async (req, res) => {
-  const { rd, tb } = req.body || {};
-  const [rdResult, tbResult] = await Promise.all([testRealDebrid(rd), testTorbox(tb)]);
-  res.json({ rd: rdResult, tb: tbResult });
+  const { rd, tb, ad } = req.body || {};
+  const [rdResult, tbResult, adResult] = await Promise.all([testRealDebrid(rd), testTorbox(tb), testAllDebrid(ad)]);
+  res.json({ rd: rdResult, tb: tbResult, ad: adResult });
 });
 
 // === DONAZIONI (Payblis Checkout Mode) ===
@@ -774,18 +787,6 @@ function donatePage({ title, color, icon, heading, body, ref }) {
 // mostrare quali fonti rispondono. Cache 60s per evitare di martellare le API.
 const STATUS_CACHE_TTL = 60 * 1000;
 let _statusCache = null;
-// Estrae l'host (protocol+hostname+port) da un URL completo + concatena un path.
-// Usato per derivare un endpoint /health dal URL aggregator self-hostato
-// (es. COMET_URL=http://127.0.0.1:8000/eyJ... → http://127.0.0.1:8000/health).
-function _statusHostFromUrl(fullUrl, healthPath) {
-  if (!fullUrl) return null;
-  try {
-    const u = new URL(fullUrl);
-    return `${u.protocol}//${u.host}${healthPath}`;
-  } catch (_) {
-    return null;
-  }
-}
 async function pingHost(name, url, timeoutMs = 3500) {
   const t0 = Date.now();
   try {
@@ -823,18 +824,10 @@ app.get('/api/status', async (req, res) => {
     pingHost('GuardaSerie', 'https://v.vidxgo.co/t/1375666'),
     pingHost('StreamingCommunity', `${SC_UPSTREAM}/`),
     // === Aggregator esterni (cache check Torbox/RD) ===
-    // Quando self-hostiamo l'upstream sulla nostra VPS (env var settata), il
-    // ping va al container locale via /health invece che all'istanza pubblica.
-    // Così il badge "online" nella pagina rispecchia il vero stato del backend
-    // che Pezzottio sta effettivamente chiamando.
     pingHost('Torrentio', 'https://torrentio.strem.fun/manifest.json'),
-    pingHost('MediaFusion', process.env.MEDIAFUSION_HOST
-      ? `${process.env.MEDIAFUSION_HOST.replace(/\/$/, '')}/health`
-      : 'https://mediafusionfortheweebs.midnightignite.me/'),
-    pingHost('Comet', _statusHostFromUrl(process.env.COMET_URL, '/health')
-      || 'https://comet.feels.legal/'),
-    pingHost('StremThru', _statusHostFromUrl(process.env.STREMTHRU_URL, '/v0/health')
-      || 'https://stremthru.13377001.xyz/'),
+    pingHost('MediaFusion', 'https://mediafusionfortheweebs.midnightignite.me/'),
+    pingHost('Comet', 'https://comet.feels.legal/'),
+    pingHost('StremThru', 'https://stremthru.13377001.xyz/'),
     pingHost('Meteor', 'https://meteorfortheweebs.midnightignite.me/'),
     // === Scraper torrent diretti (search.js) ===
     pingHost('Knaben', 'https://api.knaben.org/v1'),
@@ -1112,28 +1105,13 @@ function loadChangelog() {
   return _changelogCache;
 }
 
-// Helper: rimappa entries usando msg_en quando ?lang=en, fallback msg italiano
-// se la traduzione manca su una entry specifica.
-function _localizeChangelog(log, lang) {
-  if (lang !== 'en') return log;
-  return log.map((group) => ({
-    ...group,
-    items: (group.items || []).map((it) => ({
-      ...it,
-      msg: it.msg_en || it.msg,
-    })),
-  }));
-}
-
 app.get('/api/changelog', (req, res) => {
-  const lang = req.query.lang === 'en' ? 'en' : 'it';
-  res.json({ entries: _localizeChangelog(loadChangelog(), lang) });
+  res.json({ entries: loadChangelog() });
 });
 
 // Notice: ultima entry 'breaking' negli ultimi 7 giorni (banner in /configure).
 // L'utente può dismissare e non riapparirà finché non c'è una nuova breaking.
 app.get('/api/notice', (req, res) => {
-  const lang = req.query.lang === 'en' ? 'en' : 'it';
   const log = loadChangelog();
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   for (const group of log) {
@@ -1141,8 +1119,7 @@ app.get('/api/notice', (req, res) => {
     if (isNaN(groupTime) || groupTime < weekAgo) continue;
     const breakingItem = (group.items || []).find((it) => it.type === 'breaking');
     if (breakingItem) {
-      const msg = lang === 'en' ? (breakingItem.msg_en || breakingItem.msg) : breakingItem.msg;
-      return res.json({ notice: { date: group.date, msg } });
+      return res.json({ notice: { date: group.date, msg: breakingItem.msg } });
     }
   }
   res.json({ notice: null });
@@ -1155,52 +1132,38 @@ const TYPE_META = {
   perf:     { icon: '🚀', label: 'Perf',   color: '#f59e0b' },
   breaking: { icon: '🚨', label: 'Breaking', color: '#ef4444' },
 };
-const TYPE_META_EN = {
-  feat:     { icon: '✨', label: 'New',      color: '#22c55e' },
-  fix:      { icon: '🛠️', label: 'Fix',      color: '#3b82f6' },
-  config:   { icon: '⚙️', label: 'Setup',    color: '#a855f7' },
-  perf:     { icon: '🚀', label: 'Perf',     color: '#f59e0b' },
-  breaking: { icon: '🚨', label: 'Breaking', color: '#ef4444' },
-};
 
 app.get('/changelog', (req, res) => {
-  const lang = req.query.lang === 'en' ? 'en' : 'it';
-  const meta = lang === 'en' ? TYPE_META_EN : TYPE_META;
   const log = loadChangelog();
   const groups = log.map((g) => {
     const items = (g.items || []).map((it) => {
-      const m = meta[it.type] || meta.feat;
-      const msg = lang === 'en' ? (it.msg_en || it.msg) : it.msg;
+      const m = TYPE_META[it.type] || TYPE_META.feat;
       return `<li class="flex items-start gap-3 py-2.5">
         <span class="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide" style="background:${m.color}20;color:${m.color};border:1px solid ${m.color}40">
           ${m.icon} ${m.label}
         </span>
-        <span class="text-sm text-zinc-200 leading-relaxed">${String(msg).replace(/</g,'&lt;')}</span>
+        <span class="text-sm text-zinc-200 leading-relaxed">${String(it.msg).replace(/</g,'&lt;')}</span>
       </li>`;
     }).join('');
-    const date = new Date(g.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+    const date = new Date(g.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
     return `<section class="mb-10">
       <h2 class="text-sm uppercase tracking-wider text-zinc-500 font-semibold mb-3">📅 ${date}</h2>
       <ul class="space-y-1 border-l border-white/10 pl-5">${items}</ul>
     </section>`;
   }).join('');
 
-  const t = lang === 'en'
-    ? { back: '← Back to Pezzottio', backHref: '/configure-en', subtitle: 'What changed recently. Updated on every new deploy.', empty: 'No entries yet.' }
-    : { back: '← Torna a Pezzottio', backHref: '/configure', subtitle: 'Cosa è cambiato di recente. Aggiornato a ogni nuovo deploy.', empty: 'Nessuna entry ancora.' };
-
   res.type('html').send(`<!DOCTYPE html>
-<html lang="${lang}"><head>
+<html lang="it"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Changelog · Pezzottio</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>body{background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif}</style>
 </head><body>
 <div class="max-w-3xl mx-auto px-6 py-12">
-  <a href="${t.backHref}" class="text-zinc-500 text-sm hover:text-white inline-flex items-center gap-1">${t.back}</a>
+  <a href="/configure" class="text-zinc-500 text-sm hover:text-white inline-flex items-center gap-1">← Torna a Pezzottio</a>
   <h1 class="text-4xl font-extrabold mt-6 mb-2" style="color:#e50914">Changelog</h1>
-  <p class="text-zinc-400 text-sm mb-10">${t.subtitle}</p>
-  ${groups || `<p class="text-zinc-500">${t.empty}</p>`}
+  <p class="text-zinc-400 text-sm mb-10">Cosa è cambiato di recente. Aggiornato a ogni nuovo deploy.</p>
+  ${groups || '<p class="text-zinc-500">Nessuna entry ancora.</p>'}
 </div>
 </body></html>`);
 });
@@ -1546,117 +1509,115 @@ app.get('/', (req, res) => {
 </html>`);
 });
 
-// === EXTRA CATALOG (/extra/*) — TMDB-direct, no AIOMetadata dependency ===
-// Espone cataloghi streaming (Netflix, Prime, Disney+, ecc.) chiamando
-// direttamente TMDB /discover con with_watch_providers + watch_region.
-// Vantaggi vs proxy AIOMetadata (precedente):
-//   - Zero rate-limit / banning di provider terzi
-//   - Stessa fonte dati (TMDB) sotto al cofano
-//   - Più catalog se vuoi (Crunchyroll anime, regional providers IT/US)
-//   - Cache locale lato VPS, più veloce
-const pezzottioExtra = require('./providers/pezzottio-extra');
+// === EXTRA CATALOG PROXY (/extra/*) ===
+// Proxy completo verso un addon di metadata esterno preconfigurato.
+// Lo serviamo sotto il nostro dominio con branding "Pezzottio Extra" così
+// l'utente non vede il nome dell'addon upstream nel dialog Stremio.
+// Solo manifest viene riscritto (id + name); catalog/meta/subtitles sono
+// passthrough con caching aggressivo.
+const EXTRA_UPSTREAM = process.env.EXTRA_CATALOG_UPSTREAM
+  || 'https://aiometadata.elfhosted.com/stremio/3bfc4ec0-ef9d-4703-98ca-ab313631d178';
+// Upstream EN: configurazione AIOMetadata separata (lingua/sources orientati EN).
+// Lo serviamo sotto /extra-en/* con rebranding "Pezzottio Extra (English)".
+const EXTRA_UPSTREAM_EN = process.env.EXTRA_CATALOG_UPSTREAM_EN
+  || 'https://aiometadata.elfhosted.com/stremio/e06851f2-66a3-4cd7-afb9-b80c6a2c9f01';
 
-// Factory: serve manifest/catalog/meta del nostro catalogo TMDB-based.
-// `region` = 'IT' (default lingua italiana) o 'US' (lingua inglese).
-// Mappa type custom (Film/Serie/Movies/TV Series) → stremioType standard.
-const _STREMIO_TYPE_MAP = {
-  'movie': 'movie', 'series': 'series',
-  'Film': 'movie', 'Serie': 'series',
-  'Movies': 'movie', 'TV Series': 'series',
-};
-function _createExtraHandler(region) {
-  const language = region === 'IT' ? 'it-IT' : 'en-US';
+function _extraTtl(path) {
+  if (/manifest\.json$/.test(path)) return 5 * 60 * 1000;        // 5min
+  if (/^\/meta\//.test(path)) return 6 * 60 * 60 * 1000;          // 6h
+  if (/^\/catalog\//.test(path)) return 60 * 60 * 1000;           // 1h
+  if (/^\/subtitles\//.test(path)) return 60 * 60 * 1000;         // 1h
+  return 10 * 60 * 1000;                                          // default
+}
+
+// Factory: crea un proxy reusable per qualsiasi upstream AIOMetadata.
+// `brand` definisce il rebranding del manifest (id/name/description).
+function _createExtraProxy({ upstream, brand }) {
+  const cache = new Map();
+  async function fetchPath(subpath) {
+    const ckey = subpath;
+    const ttl = _extraTtl(subpath);
+    const hit = cache.get(ckey);
+    if (hit && Date.now() - hit.t < ttl) return hit;
+    try {
+      const r = await fetch(`${upstream}${subpath}`, {
+        timeout: 8000,
+        headers: { 'Accept': 'application/json', 'User-Agent': 'Pezzottio-Proxy/1.0' },
+      });
+      const body = await r.text();
+      const entry = { body, status: r.status, t: Date.now() };
+      if (r.ok) cache.set(ckey, entry);
+      return entry;
+    } catch (e) {
+      console.error(`[${brand.id}]`, subpath, e.message);
+      return { body: '{"err":"upstream"}', status: 502, t: Date.now() };
+    }
+  }
   return async (req, res) => {
     const subpath = (req.params[0] || '/').split('?')[0];
-    try {
-      // /manifest.json o root
-      if (subpath === '/manifest.json' || subpath === '/') {
-        const m = pezzottioExtra.buildManifest(region);
+    // Manifest: rebrand
+    if (subpath === '/manifest.json' || subpath === '/') {
+      const r = await fetchPath('/manifest.json');
+      if (r.status >= 400) return res.status(r.status).type('application/json').send(r.body);
+      try {
+        const m = JSON.parse(r.body);
+        m.id = brand.id;
+        m.name = brand.name;
+        m.description = brand.description;
         m.logo = `${publicBase(req)}/logo.png`;
+        if (m.behaviorHints) {
+          delete m.behaviorHints.configurable;
+          delete m.behaviorHints.configurationRequired;
+        }
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'max-age=300, public');
         return res.send(JSON.stringify(m));
+      } catch (e) {
+        return res.status(502).json({ err: 'manifest parse failed' });
       }
-      // /catalog/:type/:id.json o /catalog/:type/:id/:extra.json
-      // :type può essere standard (movie/series) o custom (Film/Serie/Movies/TV Series).
-      // Il tipo effettivo viene derivato dal catalogId (suffix -movie/-series),
-      // il :type del path è solo cosmetic per Stremio.
-      const catMatch = subpath.match(/^\/catalog\/([^/]+)\/([^/]+?)(?:\/(.+))?\.json$/);
-      if (catMatch) {
-        const catalogId = catMatch[2];
-        const extraStr = catMatch[3] || '';
-        const extra = {};
-        for (const kv of extraStr.split('&')) {
-          const [k, v] = kv.split('=');
-          if (k && v !== undefined) extra[decodeURIComponent(k)] = decodeURIComponent(v);
-        }
-        const result = await pezzottioExtra.fetchCatalog({ catalogId, region, language, extra });
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Cache-Control', 'max-age=600, public');
-        return res.send(JSON.stringify(result));
-      }
-      // /meta/:type/tmdb:NNN.json — :type può essere standard o custom
-      const metaMatch = subpath.match(/^\/meta\/([^/]+)\/(tmdb:\d+)\.json$/);
-      if (metaMatch) {
-        const typeRaw = decodeURIComponent(metaMatch[1]);
-        const stremioType = _STREMIO_TYPE_MAP[typeRaw] || 'movie';
-        const id = metaMatch[2];
-        const meta = await pezzottioExtra.fetchMeta({ stremioType, id, language });
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Cache-Control', 'max-age=3600, public');
-        return res.send(JSON.stringify({ meta: meta || null }));
-      }
-      // Path sconosciuto
-      res.status(404).json({ err: 'not found' });
-    } catch (e) {
-      console.error(`[extra ${region}]`, subpath, e.message);
-      res.status(500).json({ err: 'internal error' });
     }
+    // Tutto il resto: passthrough
+    const r = await fetchPath(subpath);
+    res.status(r.status || 200);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', `max-age=${Math.floor(_extraTtl(subpath) / 1000)}, public`);
+    res.send(r.body);
   };
 }
 
-// /extra/* → catalogo IT (TMDB region=IT, lingua italiana)
-app.get(/^\/extra(\/.*)?$/, _createExtraHandler('IT'));
+// /extra/* → catalogo IT (Netflix/Prime/Disney+/HBO/Apple TV+/Crunchyroll, descrizioni italiane)
+app.get(/^\/extra(\/.*)?$/, _createExtraProxy({
+  upstream: EXTRA_UPSTREAM,
+  brand: {
+    id: 'org.pezzottio.extracatalogs',
+    name: 'Pezzottio Extra',
+    description: 'Catalog Netflix, Prime Video, Disney+, HBO Max, Apple TV+, Crunchyroll integrato in Pezzottio.',
+  },
+}));
 
-// /extra-en/* → catalogo EN (TMDB region=US, lingua inglese)
-app.get(/^\/extra-en(\/.*)?$/, _createExtraHandler('US'));
+// /extra-en/* → catalogo EN (config AIOMetadata separata, lingua/source EN-oriented)
+app.get(/^\/extra-en(\/.*)?$/, _createExtraProxy({
+  upstream: EXTRA_UPSTREAM_EN,
+  brand: {
+    id: 'org.pezzottio.extracatalogs.en',
+    name: 'Pezzottio Extra (English)',
+    description: 'Netflix, Prime Video, Disney+, HBO Max, Apple TV+, Crunchyroll catalog — English edition integrated in Pezzottio.',
+  },
+}));
 
 // Manifest dinamico: rimuove i cataloghi Pezzottio Anime se l'utente ha
 // disabilitato l'anime nella sua config (httpAnime=false). Catalogo e stream
 // HTTP anime vanno insieme — se uno è off, l'altro pure. Questo middleware
 // deve girare PRIMA del SDK router (che serve il manifest statico).
-// Per lang='en' traduce anche i nomi dei catalog anime in inglese (lo statico
-// è hardcoded in italiano — backward-compat per utenti IT esistenti).
 app.get(/^\/manifest\.json$/, (req, res, next) => serveManifest(req, res, next));
-const ANIME_CATALOG_NAMES_EN = {
-  'pezzottio-anime-airing': 'Pezzottio Anime — Airing',
-  'pezzottio-anime-popular': 'Pezzottio Anime — Most Popular',
-  'pezzottio-anime-rating': 'Pezzottio Anime — Top Rated',
-  'pezzottio-anime-newest': 'Pezzottio Anime — Newest',
-};
 function serveManifest(req, res) {
   try {
     const animeOff = req.userConfig?.httpAnime === false || req.userConfig?.httpAnime === 'false';
-    const lang = (req.userConfig?.lang === 'en' || req.userConfig?.lang === 'mixed') ? req.userConfig.lang : 'it';
     // Clone shallow del manifest. Filtra catalogs se anime off.
     const m = { ...addonInterface.manifest };
     if (animeOff && Array.isArray(m.catalogs)) {
       m.catalogs = m.catalogs.filter((c) => !c.id.startsWith('pezzottio-anime-'));
     }
-    // Lang EN: ricrea il catalogs array con i nomi tradotti (search restano
-    // "Pezzottio Anime" perché generici). Lang IT: invariato.
-    if (lang === 'en' && Array.isArray(m.catalogs)) {
-      m.catalogs = m.catalogs.map((c) => {
-        const newName = ANIME_CATALOG_NAMES_EN[c.id];
-        return newName ? { ...c, name: newName } : c;
-      });
-    }
-    // Lang EN: description tradotta (l'IT è il default nel manifest base).
-    if (lang === 'en') {
-      m.description = 'Movies, series & anime with English audio first. 30+ sources, Real-Debrid & Torbox, built-in HLS proxy (no Docker/VPS). Netflix, Prime, Disney+ & more catalogs in Discover. 30s setup. 💬 Discord: https://discord.gg/Tpv3WMe77k';
-    }
-    // Hook estensione locale (opzionale): può aggiungere catalog/type al manifest.
-    try { if (_ext && _ext.manifest) _ext.manifest(m, req.userConfig || {}, lang); } catch (_) {}
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'max-age=300, public');
     res.send(JSON.stringify(m));
@@ -1669,11 +1630,7 @@ function serveManifest(req, res) {
 // Tutto il resto va all'SDK router, dentro un contesto ALS con la config dell'utente.
 const sdkRouter = getRouter(addonInterface);
 app.use((req, res, next) => {
-  // publicHost derivato dalla request (Host/X-Forwarded-Host) viene passato
-  // come 3° arg separato a runWithConfig — così non finisce in encodeConfig(user)
-  // e ogni richiesta vede l'host del suo dominio di ingresso senza propagarlo
-  // nei link emessi (cfgB64 resta pulito = solo {tb, rd, order, ...}).
-  runWithConfig(req.userConfig || {}, () => sdkRouter(req, res, next), publicBase(req));
+  runWithConfig(req.userConfig || {}, () => sdkRouter(req, res, next));
 });
 
 const c = getConfig();
