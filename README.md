@@ -2,16 +2,16 @@
 
 # **PEZZOTTIO**
 
-### Your Stremio life, no setup. · La tua vita su Stremio, senza menate.
+### Lo streaming italiano. <span style="color:#e50914">Senza menate.</span>
 
-All-in-one Stremio addon: streams from 30+ sources, integrated catalogs (movies, series, anime),
-multi-profile, TorBox + Real-Debrid, server-side HLS proxy. One install, zero external tooling.
+Apri Stremio, premi play, guardi.
+Film, serie, anime — tutti in italiano, prima possibile.
+**Una sola installazione. Zero proxy da configurare. Zero Docker.**
 
-[![Try it · English](https://img.shields.io/badge/▶_TRY_IT_EN-pezz8io.dpdns.org/configure--en-e50914?style=for-the-badge)](https://pezz8io.dpdns.org/configure-en)
-[![Provalo · Italiano](https://img.shields.io/badge/▶_PROVALO_IT-pezz8io.dpdns.org/configure-009246?style=for-the-badge)](https://pezz8io.dpdns.org/configure)
-[![Telegram](https://img.shields.io/badge/Support_/_Supporto-@Mbhere1-26a5e4?style=for-the-badge&logo=telegram)](https://t.me/Mbhere1)
+[![Try it](https://img.shields.io/badge/▶_PROVALO_ORA-pezz8io.dpdns.org-e50914?style=for-the-badge)](https://pezz8io.dpdns.org/configure)
+[![Telegram](https://img.shields.io/badge/Supporto-@Mbhere1-26a5e4?style=for-the-badge&logo=telegram)](https://t.me/Mbhere1)
 
-[**🇬🇧 English**](#-english) · [**🇮🇹 Italiano**](#-italiano) · [**🛠️ Self-hosting**](#%EF%B8%8F-self-hosting-for-power-users) · [**⚠️ Legal Disclaimer**](#%EF%B8%8F-legal-disclaimer--disclaimer-legale)
+[**Cosa fa**](#-cosa-fa) · [**Provalo**](#-provalo-in-30-secondi) · [**Domande**](#-domande-frequenti)
 
 </div>
 
@@ -19,106 +19,38 @@ multi-profile, TorBox + Real-Debrid, server-side HLS proxy. One install, zero ex
 
 <div align="center">
 
-<img src="assets/hero.png" alt="Pezzottio — clean stream list, language-sorted" width="100%">
+<img src="assets/hero.png" alt="Pezzottio: lista stream italiana ordinata per lingua" width="100%">
 
 </div>
 
 ---
 
-## 🇬🇧 ENGLISH
+## 🎬 Cosa fa
 
-### What is Pezzottio
+Pezzottio è un addon Stremio che **trova e riproduce film, serie e anime in italiano** senza che tu debba smanettare con niente. Lo installi una volta, scrivi la tua chiave Torbox, e via.
 
-Pezzottio is a Stremio addon that bundles **streams, catalogs, anime resolution, multi-profile and debrid integration into a single install**. You don't need MediaFlowProxy. You don't need Docker. You don't need a VPS of your own. Open Stremio, paste a URL, press play.
-
-- 🔌 **30+ stream sources in one list** — torrent indexers, external Stremio addons, and HTTP streaming sites integrated server-side (StreamingCommunity for movies/series, Animepahe for anime, and others). All merged, ranked by debrid-cached → quality → language preference.
-- 📚 **Integrated catalogs** — TMDB-powered Discover for movies/series (Pezzottio Extra) and Kitsu-powered anime catalog with genre filters (Pezzottio Anime). No separate catalog addons required.
-- 🤖 **Anime ID resolution** — Kitsu, MAL, AniList, AniDB all resolve correctly. Absolute episode mapping handled (e.g. One Piece S23E08 → ep 1163). Spin-offs and movies filtered out when looking for the main series.
-- ⚡ **TorBox + Real-Debrid** — instant cache check. Cached plays in ~2s. Not cached → the addon tells you upfront instead of giving you a "loading failed" 30s later.
-- 👥 **Multi-profile** — each configuration generates its own addon URL. Different profiles ("kids", "main", "anime-only") without account juggling.
-- 🔧 **Server-side HLS proxy with token rotation** — HTTP-source authentication and segment proxying are handled on the backend. No MediaFlowProxy, no Docker, no env vars required.
-- 📦 **Season packs handled** — open S05E03 from a torrent that contains 5 full seasons: Pezzottio picks the right file automatically.
-- 📊 **Live status panel** — real-time view of which sources are up / rate-limited.
-- 🔒 **No tracking, no analytics, no ads, no cookies.** Stream URLs are signed and short-lived.
-
-### Quick start
-
-1. Open **https://pezz8io.dpdns.org/configure-en**
-2. (Optional) Paste your TorBox or Real-Debrid token
-3. Click **Install in Stremio**
-
-Works without debrid too (HTTP sources only). Works on Stremio Desktop, Web, iOS, Android, Android TV, FireStick, LG WebOS, Apple TV (via Omni).
-
-### English FAQ
-
-<details>
-<summary><b>Is it free?</b></summary>
-
-Yes, the addon is completely free. TorBox and Real-Debrid are third-party debrid services that cost a few dollars/month — they're optional but make playback nearly instant. Without them, the integrated HTTP sources still work.
-</details>
-
-<details>
-<summary><b>Does Real-Debrid work?</b></summary>
-
-Yes. Pezzottio batch-checks cached torrents and emits lazy URLs that resolve on click — no API rate-limit issues.
-</details>
-
-<details>
-<summary><b>Do I need MediaFlowProxy, Docker, or my own VPS?</b></summary>
-
-No. That's the whole point. The HLS proxy is already inside Pezzottio's backend. You install one addon URL into Stremio and you're done.
-</details>
-
-<details>
-<summary><b>Smart TV / FireStick / Apple TV?</b></summary>
-
-Works everywhere Stremio runs. Configure on your phone or PC, then scan the QR code with the TV. No setup on the TV itself other than Stremio.
-</details>
-
-<details>
-<summary><b>Is my debrid key safe?</b></summary>
-
-The key is encoded inside your personal manifest URL and never stored in a database. It only lives in your URL.
-</details>
-
-<details>
-<summary><b>Where do I ask for help?</b></summary>
-
-Telegram: [@Mbhere1](https://t.me/Mbhere1). Describe what you tried (title, screenshot) and I'll get back to you.
-</details>
+- 🇮🇹 **Audio italiano per primo.** Se esiste una versione doppiata, è in cima. Se no, sottotitoli ITA. Tutto il resto dopo.
+- ⚡ **Riproduzione istantanea.** Niente "attesa torrent", niente "loading failed". Con Torbox premi play e parte. Subito.
+- 📺 **Funziona anche senza account.** Stream HTTP italiani (AnimeWorld, AnimeSaturn, GuardaSerie, StreamingCommunity) inclusi gratis. Per il meglio però serve Torbox.
+- 🎯 **Anime, film vecchi, serie introvabili.** Cerca su 30+ fonti contemporaneamente, tutte filtrate per italiano.
+- 📦 **Pack stagione gestiti.** Apri S05E03 da un torrent con 5 stagioni intere: Pezzottio fa partire l'episodio giusto da solo.
 
 ---
 
-## 🇮🇹 ITALIANO
+## 🎯 Quello che lo rende diverso
 
-### Cosa fa Pezzottio
-
-Pezzottio è un addon Stremio che **trova e riproduce film, serie e anime in italiano** senza che tu debba smanettare con niente. Lo installi una volta, scrivi la tua chiave Torbox, e via. Adesso include anche **cataloghi integrati, multi-profilo e una versione inglese**.
-
-- 🇮🇹 **Audio italiano per primo.** Se esiste una versione doppiata, è in cima. Se no, sottotitoli ITA. Tutto il resto dopo.
-- ⚡ **Riproduzione istantanea.** Niente "attesa torrent", niente "loading failed". Con Torbox premi play e parte.
-- 📺 **Funziona anche senza account.** Stream HTTP italiani inclusi gratis: **StreamingCommunity, GuardaSerie, AnimeWorld, AnimeSaturn, AnimeUnity**.
-- ⚡ **Real-Debrid supportato.** RD ora funziona con cache check istantaneo via batch endpoint (niente più rate-limit).
-- 🎯 **Anime, film vecchi, serie introvabili.** Cerca su 30+ fonti contemporaneamente, tutte filtrate per italiano.
-- 📦 **Pack stagione gestiti.** Apri S05E03 da un torrent con 5 stagioni intere: Pezzottio fa partire l'episodio giusto da solo.
-- 📚 **Cataloghi integrati.** **Pezzottio Extra** (Netflix / Prime / Disney+ / HBO Max / Apple TV+ / Crunchyroll con metadata TMDB) e **Pezzottio Anime** (Kitsu con filtri per genere) direttamente nel Discover di Stremio. Niente addon catalog separati.
-- 👥 **Multi-profilo.** Ogni configurazione genera il suo URL. Crea "Casa", "Mamma", "Anime-only" — basta cambiare URL in Stremio per switchare.
-- 📊 **Pannello status live.** Vedi in tempo reale quali provider sono up, down o in cooldown.
-- 🌐 **Versione inglese.** `pezz8io.dpdns.org/configure-en` per chi vuole guardare in inglese (catalogo separato, audio EN, sub EN, source EN-friendly).
-- 🔒 **No tracking, no analytics, no cookie, no ads.**
-
-### Quello che lo rende diverso
-
-Quasi tutti gli addon italiani per Stremio ti chiedono di **ospitare un server tuo da qualche parte** (un VPS, un Raspberry, un NAS sempre acceso) dove far girare MediaFlowProxy. Senza quello, dopo 5 minuti il video si pianta. Devi:
+Quasi tutti gli addon italiani per Stremio ti chiedono di **ospitare un server tuo da qualche parte** (un VPS, un Raspberry, un NAS sempre acceso) dove far girare un proxy chiamato MediaFlowProxy. Senza quello, dopo 5 minuti il video si pianta. Devi:
 
 - pagare un VPS o esporre la tua rete di casa
 - imparare Docker
 - tenere il server sempre acceso
 - aggiornare il proxy quando si rompe
 
+Non è impossibile, ma non è roba per la maggior parte delle persone.
+
 **Pezzottio quel proxy ce l'ha già dentro al server pubblico.**
 
-Tu apri il link, copi-incolli in Stremio, finito. Funziona uguale su PC, telefono, tablet, Android TV, Fire TV, Apple TV. Senza ospitare niente.
+Tu apri il link, copi-incolli in Stremio, finito. Funziona uguale su PC, telefono, tablet, Android TV, Fire TV. Senza che tu debba ospitare niente. Senza che tu sappia cosa sia un VPS o un Docker.
 
 |  | Altri addon italiani | **Pezzottio** |
 |---|:---:|:---:|
@@ -126,336 +58,136 @@ Tu apri il link, copi-incolli in Stremio, finito. Funziona uguale su PC, telefon
 | Devi installare e mantenere MediaFlowProxy | 🔧 sì | ✅ no |
 | Devi sapere cos'è Docker | 🤷 sì | ✅ no |
 | Video si blocca dopo 5 min | ⚠️ se sbagli setup | ✅ mai |
-| Cataloghi inclusi (Netflix/Prime/...) | ❌ addon separati | ✅ inclusi |
-| Multi-profilo | ❌ | ✅ |
 | Funziona su Android/Fire TV | 😩 complicato | ✅ subito |
 | Tempo di setup | 30-60 min | **30 secondi** |
 
-### Provalo in 30 secondi
+---
 
-**1.** Apri il link 👉 [**https://pezz8io.dpdns.org/configure**](https://pezz8io.dpdns.org/configure)
+## ⚡ Provalo in 30 secondi
 
-**2.** Incolla la chiave Torbox (opzionale, ma consigliata)
+### 1. Apri il link
+### 👉 [**https://pezz8io.dpdns.org/configure**](https://pezz8io.dpdns.org/configure)
 
-Se non hai Torbox: [**torbox.app/subscription**](https://torbox.app/subscription) (pochi euro/mese, libreria infinita, niente attese).
+### 2. Metti la chiave Torbox
 
-**3.** Clicca **"Installa in Stremio"** o inquadra il QR code dalla TV. Fatto.
+Se non hai ancora Torbox, prendilo qui (costa pochi euro al mese, ti permette di scaricare e riprodurre torrent istantaneamente dal cloud, senza saturare la tua connessione):
 
-### FAQ italiane
+### 💎 [**Registrati a Torbox →**](https://torbox.app/subscription?referral=8250a966-1950-4684-973b-cd4e181b56ad)
+
+> Usando il link sopra supporti lo sviluppo di Pezzottio (a te non costa nulla in più). Grazie!
+
+Dopo la registrazione: copia la API key da `torbox.app` → Settings → API Key, incollala su `pezz8io.dpdns.org/configure`.
+
+### 3. Installa in Stremio
+
+Clicca **"Installa in Stremio"** o inquadra il QR code dalla TV. Fatto.
+
+Apri un film qualsiasi. Vedi gli stream italiani in cima. Premi play. Funziona.
+
+---
+
+## ❓ Domande frequenti
 
 <details>
 <summary><b>Quanto costa?</b></summary>
 
-Pezzottio è gratis. Torbox / Real-Debrid sono opzionali (~5€/mese) e ti permettono riproduzione istantanea. Senza, funzionano comunque gli stream HTTP italiani inclusi.
+**Pezzottio è gratis.** Torbox costa pochi euro al mese (link sopra), e ti permette di riprodurre istantaneamente qualsiasi torrent senza scaricarlo sul tuo dispositivo. Senza Torbox funzionano comunque gli stream HTTP italiani gratuiti (AnimeWorld, AnimeSaturn, GuardaSerie, StreamingCommunity), ma con Torbox la libreria è infinita.
 </details>
 
 <details>
 <summary><b>Real-Debrid funziona?</b></summary>
 
-Sì, ora è supportato con cache check via batch endpoint (niente più rate-limit).
+Real-Debrid è **in sviluppo** e attualmente NON consigliato. Real-Debrid ha disabilitato l'API che permetterebbe a Pezzottio di sapere velocemente cosa è disponibile, quindi i risultati sono pochi e lenti. Torbox invece funziona perfettamente: usalo. RD tornerà supportato quando troveremo una soluzione affidabile.
 </details>
 
 <details>
 <summary><b>Devo ospitare qualcosa (MediaFlowProxy, Docker, VPS)?</b></summary>
 
-No, per usare Pezzottio non devi self-hostare nulla. L'**HLS proxy** per StreamingCommunity, VidXgo, AnimeWorld/Saturn/Unity (che normalmente richiederebbero MediaFlowProxy) gira nel nostro server pubblico.
-
-**Trasparenza infrastruttura:** la modalità predefinita di Pezzottio chiama in parallelo i backend di alcuni addon community. Dal 30/05/2026 il server pubblico di Pezzottio **ospita autonomamente** tre di questi (StremThru, Comet, MediaFusion) come container Docker → niente carico sui server dei rispettivi maintainer. Restano due dipendenze: **Meteor** di midnightignite (closed-source, non self-hostabile) e **Torrentio** (mirror community). Vedi la sezione [Credits / Upstream services](#-credits--upstream-services) per i dettagli completi.
+**No.** Questo è il motivo principale per cui Pezzottio esiste. Tutti gli altri addon italiani ti fanno ospitare un proxy (MediaFlowProxy) su un tuo server esterno: un VPS pagato a parte, un Raspberry sempre acceso, un Docker su un NAS. Pezzottio ce l'ha già dentro al suo server pubblico. Tu apri il link, copi in Stremio, fine.
 </details>
 
 <details>
-<summary><b>Funziona su Android TV / Fire TV / iPhone / LG WebOS / Apple TV?</b></summary>
+<summary><b>Funziona su Android TV / Fire TV / iPhone?</b></summary>
 
-Sì, ovunque ci sia Stremio (o un client compatibile come Omni su iOS). Apri `/configure` dal browser del telefono o PC, genera il link e inquadra il QR dalla TV.
+Sì, ovunque ci sia Stremio. Apri `/configure` dal browser del telefono o del PC, genera il link, e inquadralo con la TV (mostra un QR code). Niente da installare sulla TV oltre Stremio stesso.
 </details>
 
 <details>
-<summary><b>La mia chiave Torbox / RD è al sicuro?</b></summary>
+<summary><b>La mia chiave Torbox è al sicuro?</b></summary>
 
-Sì. La chiave non viene salvata sui nostri server. È codificata dentro il tuo link manifest personale e vive solo lì.
+Sì. La chiave non viene salvata sui nostri server. È codificata dentro il tuo link manifest personale e vive solo lì. Nessun database, nessun log. Se vuoi ancora più privacy, puoi ospitare la tua copia di Pezzottio in 5 minuti su Render (è gratuito).
 </details>
 
 <details>
-<summary><b>Cataloghi anime e Crunchyroll?</b></summary>
+<summary><b>Funziona con Crunchyroll / cataloghi anime?</b></summary>
 
-Sì: catalogo anime integrato basato su Kitsu (filtri per genere) + supporto qualsiasi catalogo Stremio (Kitsu, MAL, AniList, Crunchyroll, AnimeUnity, ...).
+Sì, qualunque catalogo tu abbia su Stremio (IMDb, Kitsu, MAL, AniList, Crunchyroll, AnimeUnity, ...) Pezzottio lo capisce e cerca lo stream giusto.
 </details>
 
 <details>
-<summary><b>Pack stagione: apro S05E03 ma il torrent ha 5 stagioni, parte l'episodio giusto?</b></summary>
+<summary><b>Apro S05E03 ma trovo solo un pack di 5 stagioni intere, parte l'episodio giusto?</b></summary>
 
-Sì. Pezzottio rileva il file giusto dentro l'archivio e parte da lì.
+Sì. Pezzottio rileva il file giusto dentro l'archivio e parte da lì. Niente più "ho aperto E03 ma parte E01".
 </details>
 
 <details>
-<summary><b>Trova film vecchi / anime di nicchia?</b></summary>
+<summary><b>Trova davvero film vecchi e anime di nicchia?</b></summary>
 
-Sì. 30+ fonti in parallelo, inclusi gruppi italiani specifici (MIRCrew, NAHOM, Me7alh) + provider HTTP italiani che coprono anche serie vecchie raramente indicizzate altrove.
+Sì. Pezzottio cerca su 30+ fonti contemporaneamente (incluse fonti italiane specifiche come ilCorsaroNero e gruppi come MIRCrew, NAHOM, Me7alh) + i provider HTTP italiani per gli anime (AnimeWorld, AnimeSaturn) che coprono anche le serie vecchie raramente indicizzate altrove.
 </details>
 
 <details>
 <summary><b>Non vedo stream / qualcosa non funziona, dove chiedo aiuto?</b></summary>
 
-Telegram: [**@Mbhere1**](https://t.me/Mbhere1). Scrivimi con titolo + screenshot e ti rispondo appena posso.
+Telegram: [**@Mbhere1**](https://t.me/Mbhere1). Scrivimi descrivendo cosa hai provato (titolo, screenshot se puoi) e ti rispondo appena posso.
 </details>
 
 ---
 
-## 🤝 Credits / Upstream services
+## 🛠️ Self-hosting (per smanettoni)
 
-Pezzottio's `/stream` resolver, in its default configuration, fans out requests in parallel to several community-maintained Stremio addons to enrich the torrent pool. All credit for the software goes to the original authors below.
-
-| Upstream | Software by | Default infra on public Pezzottio | Repo |
-|---|---|---|---|
-| **StremThru** | [Munif Tanjim](https://github.com/MunifTanjim) | ✅ **self-hosted by Pezzottio** (since 2026-05-30) | [github.com/MunifTanjim/stremthru](https://github.com/MunifTanjim/stremthru) |
-| **Comet** | [Goldy / g0ldyy](https://github.com/g0ldyy) | ✅ **self-hosted by Pezzottio** (since 2026-05-30) | [github.com/g0ldyy/comet](https://github.com/g0ldyy/comet) |
-| **MediaFusion** | [Midnight / mhdzumair](https://github.com/mhdzumair) | ✅ **self-hosted by Pezzottio** (since 2026-05-30) | [github.com/mhdzumair/MediaFusion](https://github.com/mhdzumair/MediaFusion) |
-| **Meteor** | midnightignite | ⚠️ uses the public instance `meteorfortheweebs.midnightignite.me` (closed-source, no Docker image available — cannot be self-hosted) | (no public repo) |
-| **Torrentio** | [Bogdan89](https://github.com/Bogdan89) (operator) | ⚠️ uses the public instance `torrentio.strem.fun` (open mirror, low impact thanks to internal rate-limit + caching) | [github.com/Stremio/stremio-addon-torrentio](https://github.com/Stremio/stremio-addon-torrentio) |
-
-The 3 self-hosted upstreams (StremThru, Comet, MediaFusion) run as Docker containers next to the Pezzottio Node.js process on the same VPS, with a shared Postgres + Redis. **The public Pezzottio instance no longer sends `/stream` traffic to Munif, Goldy, or Midnight's MediaFusion infrastructure.** Their software is still the engine, full credit to them — we just stopped freeloading on their bandwidth.
-
-Catalog data for the Pezzottio Extra catalog (streaming platform sections like Netflix / Prime / Disney+ etc.) is fetched directly from the **public [TMDB API](https://developer.themoviedb.org/)** — no external metadata proxy. Anime metadata comes from **[Kitsu API](https://kitsu.docs.apiary.io/)**.
-
-If you're a maintainer of one of the upstreams listed above and you'd still like further changes — different scrape source, contribution back, removal from defaults, anything — please open an issue on this repo or DM me. Honestly I don't have a direct contact for Munif / Goldy / Midnight; opening an issue here is the most reliable way to reach me.
-
----
-
-## 🛠️ Self-hosting (for power users)
-
-If you want to host your own copy (useful for max privacy, heavy users, or to take load off the community upstreams):
+Se vuoi ospitare la tua copia (utile se hai tanti utenti o vuoi privacy massima):
 
 ```bash
 git clone https://github.com/ceres777/pezzottio.git
 cd pezzottio
 npm install
-cp .env.example .env  # fill in your debrid keys + (optional) upstream URLs
 npm start
 ```
 
-Open `http://127.0.0.1:7001/configure` (IT) or `/configure-en` (EN).
+Apri `http://127.0.0.1:7001/configure`.
 
-Free deploy on Render: the repo includes `render.yaml`. Fork → New Web Service → Deploy.
-
-### Self-hosting the upstream community addons (required for production)
-
-**On a fresh clone, StremThru / Comet / MediaFusion / Meteor are DISABLED** (no env vars set). This is intentional: each one would otherwise hit the maintainers' free public instance, and a Pezzottio deployment serving >50 users would burden their infrastructure. Pezzottio still works in this state — the internal scrapers, the Italian HTTP providers (StreamingCommunity / VidXgo / AnimeWorld / AnimeSaturn / AnimeUnity), Torrentio (open mirror), the catalogs, and the debrid resolvers all stay active — but you'll get a smaller torrent pool.
-
-To bring StremThru / Comet / MediaFusion online, host them yourself with Docker on the same VPS. Here's a `docker-compose.yml` that runs all three behind a shared Postgres + Redis, binding only to `127.0.0.1` so they're reachable from the Pezzottio Node process but not exposed to the public internet:
-
-```yaml
-# /root/upstreams/docker-compose.yml
-services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: pezzottio-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    shm_size: 1g
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: redis-server --maxmemory 200mb --maxmemory-policy allkeys-lru
-    volumes:
-      - ./data/redis:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-
-  zilean:
-    image: ipromknight/zilean:latest
-    restart: unless-stopped
-    depends_on: { postgres: { condition: service_healthy } }
-    ports: ["127.0.0.1:8181:8181"]
-    environment:
-      Zilean__Database__ConnectionString: "Host=postgres;Database=zilean;Username=postgres;Password=${POSTGRES_PASSWORD}"
-    volumes: ["./data/zilean:/app/data"]
-
-  comet:
-    image: g0ldyy/comet:latest
-    restart: unless-stopped
-    depends_on: { postgres: { condition: service_healthy }, zilean: { condition: service_started } }
-    ports: ["127.0.0.1:8000:8000"]
-    environment:
-      DATABASE_TYPE: postgresql
-      DATABASE_URL: "postgres:${POSTGRES_PASSWORD}@postgres:5432/comet"
-      SCRAPE_ZILEAN: "True"
-      ZILEAN_URL: "http://zilean:8181"
-    volumes: ["./data/comet:/app/data"]
-
-  stremthru:
-    image: ghcr.io/muniftanjim/stremthru:latest
-    restart: unless-stopped
-    ports: ["127.0.0.1:8080:8080"]
-    volumes: ["./data/stremthru:/app/data"]
-
-  mediafusion:
-    image: mhdzumair/mediafusion:6.0.0-beta.12
-    restart: unless-stopped
-    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_healthy } }
-    ports: ["127.0.0.1:8001:8000"]
-    environment:
-      SECRET_KEY: ${MEDIAFUSION_SECRET_KEY}
-      API_PASSWORD: ${MEDIAFUSION_API_PASSWORD}
-      POSTGRES_URI: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mediafusion"
-      REDIS_URL: "redis://redis:6379"
-      HOST_URL: "http://127.0.0.1:8001"
-      CONTACT_EMAIL: "you@example.com"
-      TASKIQ_SINGLE_WORKER_MODE: "true"
-      GUNICORN_WORKERS: "2"
-```
-
-The matching `init-db.sql` (creates the per-app databases inside the shared Postgres):
-
-```sql
-CREATE DATABASE zilean;
-CREATE DATABASE comet;
-CREATE DATABASE mediafusion;
-```
-
-And the `.env` next to the compose file (generate the secrets with `openssl rand -hex 16`):
-
-```bash
-POSTGRES_PASSWORD=<openssl rand -hex 16>
-MEDIAFUSION_SECRET_KEY=<openssl rand -hex 16>
-MEDIAFUSION_API_PASSWORD=<openssl rand -hex 12>
-```
-
-Bring everything up:
-
-```bash
-docker compose up -d
-# Zilean's DMM hashlist import takes 1–6 hours on first run.
-# StremThru and MediaFusion are usable within ~1 minute.
-```
-
-Then point the Pezzottio process at the local containers by adding these to **Pezzottio's** `.env` (not the upstreams' `.env`):
-
-```bash
-# Replace <B64_*> with the base64 config you want — see the per-addon repo READMEs
-# for the schema. The configs Pezzottio uses internally enable the IT/EN language
-# filters and the "filter on cached torrents" toggles.
-STREMTHRU_URL=http://127.0.0.1:8080/stremio/torz/<B64_STREMTHRU_IT>
-STREMTHRU_URL_EN=http://127.0.0.1:8080/stremio/torz/<B64_STREMTHRU_EN>
-COMET_URL=http://127.0.0.1:8000/<B64_COMET_IT>
-COMET_URL_EN=http://127.0.0.1:8000/<B64_COMET_EN>
-MEDIAFUSION_URL=http://127.0.0.1:8001
-MEDIAFUSION_HOST=http://127.0.0.1:8001
-```
-
-Restart Pezzottio (`pm2 restart pezzottio --update-env` or equivalent). On startup the log will show `[external] active: Torrentio, MediaFusion, Comet, StremThru` confirming the local upstreams are wired up.
-
-**Meteor** is closed-source and has no Docker image — there is no self-host option. If you don't want to depend on `meteorfortheweebs.midnightignite.me`, leave `METEOR_URL`/`METEOR_URL_EN` unset and Meteor will simply be skipped.
+Deploy gratuito su Render: il repo include `render.yaml`. Fork → New Web Service → Deploy.
 
 ---
 
-## 📞 Support / Supporto
+## 📞 Supporto
 
-- **Telegram**: [@Mbhere1](https://t.me/Mbhere1) — for any issue, report, or request
-- **GitHub Issues**: [github.com/ceres777/pezzottio/issues](https://github.com/ceres777/pezzottio/issues)
-
----
-
-## ⚠️ Legal Disclaimer / Disclaimer Legale
-
-> ### English Version
-
-**1. Nature of the Software.** Pezzottio (the "Software", the "Project", the "Addon") is a free, open-source, non-commercial, educational software project. The Software is a metadata aggregator and proxy layer that operates exclusively as a client of publicly accessible, third-party Application Programming Interfaces ("third-party APIs") and publicly indexed resources. The Software does not host, store, cache for distribution, upload, seed, share, transmit, transcode for redistribution, or otherwise distribute any audiovisual, textual, or other copyrighted content. The Software is, by design and by implementation, content-agnostic.
-
-**2. "AS IS" and "AS AVAILABLE" Basis.** THE SOFTWARE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, ACCURACY, COMPLETENESS, OR UNINTERRUPTED SERVICE. NO ORAL OR WRITTEN INFORMATION OR ADVICE GIVEN BY THE AUTHOR, MAINTAINERS, OR CONTRIBUTORS SHALL CREATE A WARRANTY.
-
-**3. Limitation of Liability.** TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE AUTHOR, MAINTAINERS, CONTRIBUTORS, OR HOSTING PROVIDERS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES (INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF PROFITS, BUSINESS INTERRUPTION, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR ANY LEGAL FEES, FINES, OR JUDGMENTS) ARISING OUT OF OR IN ANY WAY CONNECTED WITH THE USE, MISUSE, OR INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-
-**4. User Responsibility.** The end user ("User") is solely, exclusively, and entirely responsible for: (a) the manner in which the Software is used; (b) the legal status of any third-party content, links, streams, or resources accessed by, through, or with the Software; (c) compliance with all applicable national, supranational, regional, and local laws, statutes, regulations, treaties, directives, and ordinances, including but not limited to copyright law, intellectual property law, data protection law, electronic communications law, broadcasting law, and any law concerning the access to, possession of, reproduction of, distribution of, or public communication of audiovisual works; (d) obtaining, holding, and maintaining all licenses, authorizations, subscriptions, or permissions required by the User's jurisdiction to access any content; (e) any financial, civil, administrative, or criminal consequence arising from such use. By installing, configuring, or otherwise using the Software, the User unconditionally accepts this responsibility in full.
-
-**5. Educational and Research Purpose.** The Software is developed, distributed, and made available strictly for educational, research, interoperability, technical demonstration, personal study, and academic illustration purposes. Any other use is undertaken at the User's own initiative and entirely at the User's own risk. The Author does not encourage, endorse, solicit, condone, promote, advise, or otherwise invite the use of the Software for any unlawful purpose.
-
-**6. Third-Party Services and Trademarks.** The Software interacts with third-party services and APIs operated by independent entities ("Third-Party Services"), including but not limited to debrid services, metadata providers, public torrent indexers, and streaming sites. The Author has no affiliation, sponsorship, partnership, endorsement, license, or commercial relationship with any of these Third-Party Services unless explicitly stated. All trademarks, service marks, trade names, product names, logos, and brand identifiers referenced in the Software, the documentation, the configuration interfaces, or any associated materials are and remain the exclusive property of their respective owners. References are used solely for descriptive, identifying, and interoperability purposes and do not imply any endorsement, affiliation, or sponsorship. The User is responsible for complying with the Terms of Service of each Third-Party Service the User chooses to use.
-
-**7. No Content Hosting; Compliance Procedure.** The Author does not host, control, edit, or monitor the content available through Third-Party Services. The Software performs purely transient technical operations (caching, transcoding hints, segment proxying) that fall within recognized safe-harbor provisions of applicable law, including, where applicable, the EU Directive on Electronic Commerce (2000/31/EC), the EU Digital Services Act (Regulation (EU) 2022/2065), the United States Digital Millennium Copyright Act (17 U.S.C. § 512), and analogous national implementing legislation. Should any rights holder believe that the Software, in its source code, default configuration, or documentation, facilitates infringement of their rights, they are invited to submit a written, substantiated, and legally compliant notice to the maintainer contact listed in this repository. The Author reserves the right to remove, disable, modify, or amend any component of the Software upon receipt of a valid notice.
-
-**7-bis. Default Upstream Community Addons.** In its default configuration, the Software's `/stream` resolver issues parallel HTTP requests to several Stremio addon backends in order to enrich the torrent pool. As of 2026-05-30, the **publicly hosted Pezzottio instance** runs the following three open-source upstreams as Docker containers on its own infrastructure (no longer hitting the original maintainers' public endpoints): **StremThru** (software by Munif Tanjim), **Comet** (software by Goldy/g0ldyy), and **MediaFusion** (software by Midnight/mhdzumair). Full credit for the software remains with the original authors. The public Pezzottio instance still calls the public hosted instances of **Meteor** (`meteorfortheweebs.midnightignite.me`, closed-source — no Docker image is published, therefore self-hosting is not possible) and **Torrentio** (`torrentio.strem.fun`, an open mirror). Self-hosting deployments of the Software may override each upstream endpoint via environment variables (`STREMTHRU_URL`, `COMET_URL`, `COMET_URL_EN`, `MEDIAFUSION_URL`, `MEDIAFUSION_HOST`, `METEOR_URL`, `METEOR_URL_EN`, `TORRENTIO_URL`) to point at their own private instances. Should any upstream maintainer wish to be removed from the default configuration or request any change, a notice opened on the repository issue tracker shall be honored promptly. Full credits and links to each upstream project are provided in the "Credits / Upstream services" section of this repository's README.
-
-**8. No Storage of User Data.** The publicly hosted instance of the Software, if and when available, does not persist user credentials, debrid API keys, IP addresses, viewing history, watchlists, or any other personally identifiable information in a database. Debrid keys and configuration parameters are encoded inside the User's personal addon URL and exist only therein. No telemetry, advertising, third-party tracker, or analytics is integrated into the Software. The Author reserves the right to retain transient operational logs (request paths, timestamps, status codes, error traces) strictly for the purpose of preserving service stability, diagnosing technical malfunctions, and preventing abuse, with such logs being rotated and discarded according to a short retention policy.
-
-**9. No Guarantee of Availability.** The Author makes no commitment to maintain, operate, host, or continue the public instance of the Software, in whole or in part, for any period of time. The public instance, third-party API integrations, individual sources, catalogs, and any other component may be discontinued, suspended, throttled, or modified at any time, without prior notice, and without any obligation to provide replacement, migration, or refund of any kind.
-
-**10. Self-Hosting.** The Software's source code is distributed under the MIT License. Users who wish to deploy a private, independently operated instance of the Software for their own personal use are free to do so under the terms of the MIT License. Self-hosting Users are solely responsible for the legal status of their deployment in their jurisdiction, including any obligations regarding registration, taxation, data protection, and content moderation that may apply.
-
-**11. No Professional Advice.** Nothing in the Software, the documentation, the website, or any associated communication channel constitutes legal advice, fiscal advice, technical certification, or any other form of professional consultation. Users seeking such guidance must consult a qualified, locally licensed professional.
-
-**12. Indemnification.** The User agrees to indemnify, defend, and hold harmless the Author, the maintainers, the contributors, and any hosting providers from and against any and all claims, demands, actions, suits, proceedings, liabilities, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising out of or in any way related to (a) the User's use or misuse of the Software, (b) the User's violation of any law, regulation, or third-party right, or (c) the User's breach of any term of this Disclaimer.
-
-**13. Severability.** If any provision of this Disclaimer is held to be invalid, illegal, or unenforceable by a court of competent jurisdiction, such provision shall be deemed modified to the minimum extent necessary to make it valid, legal, and enforceable; the remaining provisions shall continue in full force and effect.
-
-**14. Acceptance.** Installation, configuration, deployment, or any other use of the Software constitutes the User's unconditional and irrevocable acceptance of every term of this Disclaimer. Users who do not agree with any term of this Disclaimer must not install, configure, deploy, or use the Software.
-
-**15. Amendments.** The Author reserves the right to modify, amend, supplement, or replace this Disclaimer at any time, at the Author's sole discretion. The current version of the Disclaimer is the version published in this repository at the time the User accesses the Software. Continued use of the Software after any modification constitutes acceptance of the modified Disclaimer.
-
-**16. Governing Law and Jurisdiction.** This Disclaimer shall be governed by and construed in accordance with the laws of the Italian Republic, without regard to its conflict of laws principles. Any dispute arising out of or in connection with this Disclaimer shall be subject to the exclusive jurisdiction of the courts having competence over the legal residence of the Author, to the extent permitted by applicable mandatory provisions of consumer or other protective legislation.
+- **Telegram**: [@Mbhere1](https://t.me/Mbhere1) — per qualsiasi problema, segnalazione, richiesta
+- **Issues GitHub**: [github.com/ceres777/pezzottio/issues](https://github.com/ceres777/pezzottio/issues)
 
 ---
 
-> ### Versione Italiana
+## ⚠️ Disclaimer
 
-**1. Natura del Software.** Pezzottio (il "Software", il "Progetto", l'"Addon") è un progetto software libero, open-source, non commerciale e a scopo educativo. Il Software è un aggregatore di metadati e uno strato di proxy tecnico che opera esclusivamente come client di Application Programming Interfaces ("API di terze parti") e risorse pubblicamente indicizzate, gestite da soggetti indipendenti. Il Software **non ospita, non archivia per la distribuzione, non memorizza in modo persistente, non carica, non condivide tramite seeding, non trasmette, non transcodifica per la ridistribuzione, né altrimenti distribuisce alcun contenuto audiovisivo, testuale o di altra natura protetto da diritto d'autore**. Per design e per implementazione, il Software è agnostico rispetto al contenuto.
-
-**2. Fornitura "COSÌ COM'È" e "COME DISPONIBILE".** IL SOFTWARE È FORNITO "COSÌ COM'È" E "COME DISPONIBILE", SENZA GARANZIE DI ALCUN GENERE, ESPRESSE O IMPLICITE, INCLUSE, A TITOLO ESEMPLIFICATIVO E NON ESAUSTIVO, GARANZIE IMPLICITE DI COMMERCIABILITÀ, IDONEITÀ A UN PARTICOLARE SCOPO, NON VIOLAZIONE DI DIRITTI DI TERZI, ACCURATEZZA, COMPLETEZZA O CONTINUITÀ DEL SERVIZIO. Nessuna informazione o consiglio, orale o scritto, fornito dall'Autore, dai manutentori o dai contributori costituisce o costituirà una garanzia.
-
-**3. Limitazione di Responsabilità.** NELLA MISURA MASSIMA CONSENTITA DALLA LEGGE APPLICABILE, IN NESSUN CASO L'AUTORE, I MANUTENTORI, I CONTRIBUTORI O I PROVIDER DI HOSTING SARANNO RESPONSABILI PER ALCUN DANNO DIRETTO, INDIRETTO, INCIDENTALE, SPECIALE, ESEMPLARE, CONSEQUENZIALE O PUNITIVO (INCLUSI, A TITOLO ESEMPLIFICATIVO, PERDITA DI DATI, PERDITA DI PROFITTI, INTERRUZIONE DELL'ATTIVITÀ, COSTI PER L'APPROVVIGIONAMENTO DI BENI O SERVIZI SOSTITUTIVI, ONERI LEGALI, SANZIONI O CONDANNE) DERIVANTI DA O IN QUALSIASI MODO CONNESSI ALL'USO, ALL'USO IMPROPRIO O ALL'IMPOSSIBILITÀ DI USO DEL SOFTWARE, ANCHE SE INFORMATI DELLA POSSIBILITÀ DI TALI DANNI.
-
-**4. Responsabilità dell'Utente.** L'utente finale ("Utente") è l'unico, esclusivo e integrale responsabile di: (a) le modalità con cui il Software viene utilizzato; (b) la qualifica giuridica di qualsiasi contenuto, link, stream o risorsa di terze parti consultato o reso accessibile tramite il Software; (c) il rispetto integrale di tutte le leggi, normative, regolamenti, trattati, direttive, ordinanze e disposizioni applicabili a livello nazionale, sovranazionale, regionale e locale, ivi inclusi, a titolo non esaustivo, il diritto d'autore, il diritto della proprietà intellettuale, la normativa in materia di protezione dei dati personali, la normativa sulle comunicazioni elettroniche, la normativa sulla radiodiffusione e qualsivoglia disposizione relativa all'accesso, al possesso, alla riproduzione, alla distribuzione o alla comunicazione al pubblico di opere audiovisive; (d) l'ottenimento e il mantenimento di tutte le licenze, autorizzazioni, abbonamenti o permessi richiesti nella giurisdizione dell'Utente per accedere a qualsivoglia contenuto; (e) qualunque conseguenza di carattere economico, civile, amministrativo o penale derivante da tale uso. Installando, configurando o altrimenti utilizzando il Software, l'Utente accetta incondizionatamente e integralmente tale responsabilità.
-
-**5. Finalità Educativa e di Ricerca.** Il Software è sviluppato, distribuito e reso disponibile esclusivamente per finalità di studio, ricerca, interoperabilità tecnica, dimostrazione didattica, approfondimento personale e illustrazione accademica. Qualunque altro utilizzo è effettuato per iniziativa autonoma dell'Utente e a totale ed esclusivo rischio dello stesso. L'Autore non incoraggia, non promuove, non approva, non sollecita né altrimenti invita l'uso del Software per finalità illecite.
-
-**6. Servizi di Terze Parti e Marchi.** Il Software interagisce con servizi e API gestiti da soggetti indipendenti ("Servizi di Terze Parti"), inclusi a titolo esemplificativo servizi di debrid, fornitori di metadati, indici di torrent pubblici e siti di streaming. L'Autore non ha alcun rapporto di affiliazione, sponsorizzazione, partnership, endorsement, licenza o relazione commerciale con tali Servizi di Terze Parti, salvo ove espressamente dichiarato. Tutti i marchi, marchi di servizio, denominazioni commerciali, nomi di prodotto, loghi e segni distintivi citati nel Software, nella documentazione, nelle interfacce di configurazione o nei materiali correlati sono di proprietà esclusiva dei rispettivi titolari. Tali riferimenti sono utilizzati esclusivamente per finalità descrittive, identificative e di interoperabilità tecnica e non implicano alcun endorsement, affiliazione o sponsorizzazione. L'Utente è responsabile del rispetto dei Termini di Servizio di ciascun Servizio di Terze Parti del quale decida di avvalersi.
-
-**7. Assenza di Hosting di Contenuti; Procedura di Conformità.** L'Autore non ospita, non controlla, non modifica e non monitora i contenuti accessibili tramite i Servizi di Terze Parti. Il Software esegue operazioni tecniche di natura transitoria (caching, suggerimenti di transcodifica, proxy di segmenti) che ricadono nelle previsioni di esonero da responsabilità riconosciute dalla normativa applicabile, ivi incluse, ove applicabili, le disposizioni della Direttiva 2000/31/CE sul commercio elettronico, del Regolamento (UE) 2022/2065 (Digital Services Act), e della corrispondente normativa nazionale di recepimento (D.Lgs. 70/2003 e successive modifiche). Qualora un titolare di diritti ritenga che il Software, nel suo codice sorgente, nella configurazione predefinita o nella documentazione, agevoli la violazione dei propri diritti, è invitato a trasmettere una notifica scritta, motivata e conforme ai requisiti di legge al contatto del manutentore indicato nel presente repository. L'Autore si riserva il diritto di rimuovere, disabilitare, modificare o emendare qualsiasi componente del Software a fronte del ricevimento di una notifica valida.
-
-**7-bis. Addon di Comunità Predefiniti come Upstream.** Nella propria configurazione predefinita, il resolver `/stream` del Software invia richieste HTTP in parallelo verso diversi backend di addon Stremio per arricchire il pool di torrent. A partire dal 2026-05-30, l'**istanza pubblica di Pezzottio** ospita autonomamente i seguenti tre upstream open-source come container Docker sulla propria infrastruttura (non chiama più gli endpoint pubblici dei manutentori originali): **StremThru** (software di Munif Tanjim), **Comet** (software di Goldy/g0ldyy) e **MediaFusion** (software di Midnight/mhdzumair). Il credito per il software resta interamente agli autori originali. L'istanza pubblica di Pezzottio continua a chiamare le istanze pubbliche di **Meteor** (`meteorfortheweebs.midnightignite.me`, software closed-source — non viene pubblicata alcuna immagine Docker e pertanto il self-hosting non è possibile) e **Torrentio** (`torrentio.strem.fun`, mirror open). I deployment self-hosting del Software possono sovrascrivere ciascun endpoint upstream tramite variabili d'ambiente (`STREMTHRU_URL`, `COMET_URL`, `COMET_URL_EN`, `MEDIAFUSION_URL`, `MEDIAFUSION_HOST`, `METEOR_URL`, `METEOR_URL_EN`, `TORRENTIO_URL`) per puntare a proprie istanze private. Qualora un manutentore upstream desideri essere rimosso dalla configurazione predefinita o richiedere qualsiasi modifica, una segnalazione aperta sull'issue tracker del repository sarà onorata tempestivamente. Crediti completi e link a ciascun progetto upstream sono forniti nella sezione "Credits / Upstream services" del README di questo repository.
-
-**8. Assenza di Conservazione dei Dati dell'Utente.** L'istanza pubblicamente ospitata del Software, ove disponibile, non conserva su database credenziali utente, chiavi API di debrid, indirizzi IP, cronologie di visualizzazione, watchlist o qualsivoglia altra informazione personalmente identificabile. Le chiavi di debrid e i parametri di configurazione sono codificati all'interno dell'URL personale dell'addon dell'Utente ed esistono unicamente lì. Nessun sistema di telemetria, pubblicità, tracker di terze parti o analitica è integrato nel Software. L'Autore si riserva la facoltà di conservare log operativi transitori (percorsi delle richieste, timestamp, codici di stato, tracce di errore) esclusivamente al fine di preservare la stabilità del servizio, diagnosticare malfunzionamenti tecnici e prevenire abusi, con politica di rotazione e cancellazione a breve termine.
-
-**9. Nessuna Garanzia di Disponibilità.** L'Autore non assume alcun impegno a mantenere, operare, ospitare o continuare l'istanza pubblica del Software, in tutto o in parte, per alcun periodo di tempo. L'istanza pubblica, le integrazioni con API di terze parti, le singole fonti, i cataloghi e qualunque altro componente potranno essere dismessi, sospesi, limitati o modificati in qualsiasi momento, senza preavviso e senza alcun obbligo di fornire sostituzioni, migrazioni o rimborsi.
-
-**10. Self-Hosting.** Il codice sorgente del Software è distribuito secondo i termini della Licenza MIT. Gli Utenti che desiderino effettuare il deployment di un'istanza privata e gestita in modo indipendente del Software, per il proprio uso personale, sono liberi di farlo nei termini della Licenza MIT. Gli Utenti che ospitano autonomamente il Software sono esclusivi responsabili della qualifica giuridica del loro deployment nella propria giurisdizione, ivi inclusi obblighi di registrazione, fiscali, di protezione dei dati e di moderazione dei contenuti eventualmente applicabili.
-
-**11. Assenza di Consulenza Professionale.** Nessun elemento contenuto nel Software, nella documentazione, nel sito web o in qualsivoglia canale di comunicazione associato costituisce consulenza legale, consulenza fiscale, certificazione tecnica o altra forma di consulenza professionale. Gli Utenti che necessitino di tale consulenza sono tenuti a rivolgersi a un professionista qualificato e abilitato nella propria giurisdizione.
-
-**12. Manleva e Indennizzo.** L'Utente si impegna a manlevare, difendere e tenere indenni l'Autore, i manutentori, i contributori e qualsivoglia provider di hosting da e contro ogni e qualsiasi pretesa, richiesta, azione, causa, procedimento, responsabilità, danno, perdita, costo e spesa (incluse le ragionevoli spese legali) derivanti da o in qualunque modo connessi a (a) l'uso o l'uso improprio del Software da parte dell'Utente, (b) la violazione di qualsivoglia legge, regolamento o diritto di terzi da parte dell'Utente, (c) la violazione di qualsivoglia clausola del presente Disclaimer da parte dell'Utente.
-
-**13. Salvaguardia delle Clausole.** Qualora una qualsivoglia disposizione del presente Disclaimer sia ritenuta invalida, illegittima o non eseguibile da parte di un'autorità giudiziaria competente, tale disposizione sarà considerata modificata nella misura minima necessaria a renderla valida, legittima ed eseguibile; le restanti disposizioni resteranno pienamente in vigore.
-
-**14. Accettazione.** L'installazione, la configurazione, il deployment o qualsivoglia altro utilizzo del Software costituisce accettazione incondizionata e irrevocabile, da parte dell'Utente, di ogni clausola del presente Disclaimer. Gli Utenti che non intendano accettare anche una sola clausola del presente Disclaimer sono tenuti a non installare, non configurare, non distribuire e non utilizzare il Software.
-
-**15. Modifiche.** L'Autore si riserva il diritto di modificare, integrare, sostituire o emendare il presente Disclaimer in qualsiasi momento, a propria esclusiva discrezione. La versione vigente è quella pubblicata in questo repository nel momento in cui l'Utente accede al Software. Il proseguimento dell'uso del Software successivo a qualsivoglia modifica costituisce accettazione del Disclaimer modificato.
-
-**16. Legge Applicabile e Foro Competente.** Il presente Disclaimer è regolato e interpretato secondo la legge della Repubblica Italiana, senza riguardo ai relativi principi sui conflitti di legge. Qualunque controversia derivante dal o connessa al presente Disclaimer sarà devoluta alla competenza esclusiva del foro avente competenza sulla residenza legale dell'Autore, nei limiti consentiti dalle disposizioni inderogabili in materia di tutela del consumatore o di altra natura.
+Pezzottio è un progetto educativo open-source fornito "così com'è". L'addon non ospita né distribuisce alcun contenuto: si limita a interrogare API pubbliche di terze parti. L'utente è l'unico responsabile dell'uso del software e dei contenuti a cui accede. Rispetta le leggi sul diritto d'autore del tuo paese.
 
 ---
 
-## 📜 License / Licenza
+## 📜 Licenza
 
-MIT. See [`LICENSE`](LICENSE).
+MIT. Vedi [`LICENSE`](LICENSE).
 
 ---
 
 <div align="center">
 
-**Stop searching. Start watching. · Smetti di cercare. Inizia a guardare.**
+**Smetti di cercare. Inizia a guardare.**
 
-### 🇬🇧 [pezz8io.dpdns.org/configure-en](https://pezz8io.dpdns.org/configure-en) · 🇮🇹 [pezz8io.dpdns.org/configure](https://pezz8io.dpdns.org/configure)
+### 🔗 [pezz8io.dpdns.org/configure](https://pezz8io.dpdns.org/configure)
 
-<sub>Open source · MIT · 🇮🇹 Made in Italy · Support / Supporto: [@Mbhere1](https://t.me/Mbhere1)</sub>
+### 💎 [Registrati a Torbox](https://torbox.app/subscription?referral=8250a966-1950-4684-973b-cd4e181b56ad)
+
+<sub>Open source · MIT · Realizzato in 🇮🇹 · Supporto Telegram [@Mbhere1](https://t.me/Mbhere1)</sub>
 
 </div>

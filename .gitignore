@@ -8,12 +8,4 @@ node_modules/
 assets/anime-mapping.json
 *.local.js
 *.local.json
-
-# scripts/ ignorato in blocco (file local), eccetto i tool versionati
-scripts/*
-!scripts/changelog-discord.js
-!scripts/status-discord.js
-# stato runtime dei poster Discord — mai committare
-scripts/.changelog-posted.json
-scripts/.status-message-id.json
-data/
+scripts/

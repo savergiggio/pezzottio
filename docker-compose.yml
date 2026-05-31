@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pezzottio:
+    build: .
+    container_name: pezzottio-addon
+    ports:
+      - "7890:7890"
+    environment:
+      - PORT=7890
+      - HOST=0.0.0.0
+      # You can specify your keys and hosts here if needed:
+      # - PORT=7890
+      # - HOST=0.0.0.0
+      - PUBLIC_HOST=INSERISCI_IL_TUO_IP:PORTA_O_DNS
+    restart: unless-stopped
