@@ -1,4 +1,4 @@
-function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta, prefetch, httpAnime }) {
+function render({ base, rd, tb, ad, order, aios, style, onlyTorrent, filter, fullIta, prefetch, httpAnime }) {
   const ord = order || 'smart';
   // Backward compat: aios:true legacy → style='aios'
   const st = style || (aios === true || aios === 'true' ? 'aios' : 'pezzottio');
@@ -272,11 +272,11 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 text-sm">
       <span class="text-base">🚨</span>
       <div class="flex-1 text-zinc-200">
-        <span class="font-semibold text-red-400 mr-2">Notice:</span>
+        <span class="font-semibold text-red-400 mr-2">Avviso:</span>
         <span id="notice-msg"></span>
       </div>
-      <a href="/changelog?lang=en" class="text-xs text-zinc-400 hover:text-white whitespace-nowrap">details →</a>
-      <button id="notice-close" class="text-zinc-500 hover:text-white text-xl leading-none ml-2" aria-label="Close">×</button>
+      <a href="/changelog" class="text-xs text-zinc-400 hover:text-white whitespace-nowrap">dettagli →</a>
+      <button id="notice-close" class="text-zinc-500 hover:text-white text-xl leading-none ml-2" aria-label="Chiudi">×</button>
     </div>
   </div>
 
@@ -345,20 +345,6 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
             What it does
           </a>
         </div>
-
-        <!-- Discord CTA — the only official channel for support and announcements. -->
-        <a href="https://discord.gg/Tpv3WMe77k" target="_blank" rel="noopener"
-           class="group mt-5 inline-flex items-center gap-3 px-4 py-3 rounded-lg transition hover:opacity-90"
-           style="background:rgba(88,101,242,0.10); border:1px solid rgba(88,101,242,0.35);">
-          <div class="shrink-0 w-9 h-9 rounded-md flex items-center justify-center" style="background:#5865F2;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-          </div>
-          <div class="text-left">
-            <div class="text-sm font-semibold text-white leading-tight">Join the Pezzottio Discord</div>
-            <div class="text-xs text-zinc-400 mt-0.5">Early updates · priority support · <span class="text-zinc-200">I only reply here</span></div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-zinc-500 group-hover:text-white transition shrink-0" style="margin-left:4px;"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
       </div>
 
       <!-- DONAZIONI tramite buono regalo Amazon via Bitrefill.
@@ -376,7 +362,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
           <div class="text-sm text-zinc-300 leading-relaxed mb-4">
             Server, bandwidth and domain cost money. You can donate with an <strong class="text-white">Amazon gift card</strong> of any amount (from $5/€5 up) — simple, anonymous, no account needed.
           </div>
-          <a href="https://www.bitrefill.com/us/en/gift-cards/amazon_it-italy/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold text-black transition hover:opacity-90" style="background:#ff9900;">
+          <a href="https://www.bitrefill.com/us/en/gift-cards/amazon-us/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold text-black transition hover:opacity-90" style="background:#ff9900;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.5C7 22 17 22 20.5 18.5l-1-1C16.5 21 7.5 21 4.5 17.5l-1 1zM22 16l-1-3-3 1 1 3 3-1z"/></svg>
             Buy on Bitrefill
           </a>
@@ -388,7 +374,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
               <div>3. Check <strong class="text-white">Send as a gift</strong></div>
               <div>4. Enter the recipient email:</div>
               <div class="flex items-center gap-2 mt-2">
-                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-100 block flex-1 min-w-0 truncate">pezz8io@proton.me</code>
+                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-100 flex-1 min-w-0 truncate">pezz8io@proton.me</code>
                 <button data-copy-addr="pezz8io@proton.me" class="copy-addr-btn text-xs px-3 py-1.5 rounded font-semibold text-black transition hover:opacity-90 whitespace-nowrap shrink-0" style="background:#ff9900;">Copy</button>
               </div>
               <div class="text-xs text-zinc-400 pt-1.5">Pay with card, PayPal, Apple/Google Pay or crypto — whatever you prefer. The gift card arrives via email straight to Pezzottio.</div>
@@ -399,17 +385,17 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
             <div class="space-y-1.5">
               <div class="flex items-center gap-2">
                 <span class="text-sm font-semibold text-zinc-100 w-16 shrink-0">BTC</span>
-                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 block flex-1 min-w-0 truncate" title="bc1qcu9ch68gua0u4pgfqzlxshtdv99s06pwyhu4mm">bc1qcu9ch68gua0u4pgfqzlxshtdv99s06pwyhu4mm</code>
+                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 flex-1 min-w-0 truncate" title="bc1qcu9ch68gua0u4pgfqzlxshtdv99s06pwyhu4mm">bc1qcu9ch68gua0u4pgfqzlxshtdv99s06pwyhu4mm</code>
                 <button data-copy-addr="bc1qcu9ch68gua0u4pgfqzlxshtdv99s06pwyhu4mm" class="copy-addr-btn text-xs px-3 py-1.5 rounded bg-white/[0.06] border border-white/[0.10] text-zinc-200 hover:bg-white/[0.10] transition whitespace-nowrap shrink-0">Copy</button>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm font-semibold text-zinc-100 w-16 shrink-0">ETH</span>
-                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 block flex-1 min-w-0 truncate" title="0x8915E5A201d66d55C91F9828c580931dB92fD82a">0x8915E5A201d66d55C91F9828c580931dB92fD82a</code>
+                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 flex-1 min-w-0 truncate" title="0x8915E5A201d66d55C91F9828c580931dB92fD82a">0x8915E5A201d66d55C91F9828c580931dB92fD82a</code>
                 <button data-copy-addr="0x8915E5A201d66d55C91F9828c580931dB92fD82a" class="copy-addr-btn text-xs px-3 py-1.5 rounded bg-white/[0.06] border border-white/[0.10] text-zinc-200 hover:bg-white/[0.10] transition whitespace-nowrap shrink-0">Copy</button>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm font-semibold text-zinc-100 w-16 shrink-0">Solana</span>
-                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 block flex-1 min-w-0 truncate" title="9U21MvZGgGhXpjuTz9MNfYorTQEYhkfd1LtWfjA9ib7W">9U21MvZGgGhXpjuTz9MNfYorTQEYhkfd1LtWfjA9ib7W</code>
+                <code class="mono text-xs bg-white/[0.06] border border-white/[0.10] rounded px-2.5 py-1.5 text-zinc-200 flex-1 min-w-0 truncate" title="9U21MvZGgGhXpjuTz9MNfYorTQEYhkfd1LtWfjA9ib7W">9U21MvZGgGhXpjuTz9MNfYorTQEYhkfd1LtWfjA9ib7W</code>
                 <button data-copy-addr="9U21MvZGgGhXpjuTz9MNfYorTQEYhkfd1LtWfjA9ib7W" class="copy-addr-btn text-xs px-3 py-1.5 rounded bg-white/[0.06] border border-white/[0.10] text-zinc-200 hover:bg-white/[0.10] transition whitespace-nowrap shrink-0">Copy</button>
               </div>
             </div>
@@ -618,7 +604,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
           <div class="text-xs text-zinc-400 leading-relaxed">
             Don't have Torbox yet? <strong class="text-white">A few bucks a month</strong>, infinite library, zero waiting.
           </div>
-          <a href="https://torbox.app/subscription" target="_blank" rel="noopener"
+          <a href="https://torbox.app/subscription?referral=8250a966-1950-4684-973b-cd4e181b56ad" target="_blank" rel="noopener"
             class="btn-primary inline-flex items-center gap-2 px-4 py-2 rounded text-xs uppercase whitespace-nowrap">
             💎 Sign up for Torbox
           </a>
@@ -648,7 +634,33 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
         </div>
         <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
           You can set up Real-Debrid <strong class="text-zinc-300">together with Torbox</strong>: the stream list
-          will show results from both (badges [RD⚡] and [TB⚡]).
+          will show results from both (badges [RD⚡] e [TB⚡]).
+        </div>
+      </div>
+
+      <!-- AD -->
+      <div class="card card-ad p-4 sm:p-6 mb-3" style="border-left: 3px solid #f5a524;">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white" style="color: #f5a524;">AD</div>
+            <div>
+              <div class="font-semibold text-zinc-100">All-Debrid</div>
+              <div class="text-xs text-zinc-500">Alternative or complement. Works in parallel.</div>
+            </div>
+          </div>
+          <a href="https://alldebrid.com/apikeys" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition">get token →</a>
+        </div>
+        <div class="relative">
+          <input id="ad-key" type="password" autocomplete="off" spellcheck="false"
+            class="input mono w-full rounded-lg px-3.5 py-2.5 pr-20 text-sm"
+            placeholder="paste your API key" value="${escape(ad)}" />
+          <div id="ad-valid" class="valid-badge hidden"></div>
+          <button type="button" data-toggle="ad-key" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 hover:text-zinc-200 px-2.5 py-1 rounded-md hover:bg-white/5 transition">
+            show
+          </button>
+        </div>
+        <div class="mt-3 text-[11px] text-zinc-500 leading-relaxed">
+          You can set up All-Debrid <strong class="text-zinc-300">together with other providers</strong> (badge [AD⚡]).
         </div>
       </div>
 
@@ -1054,7 +1066,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
             Support @Mbhere1
           </a>
           <span class="text-zinc-700">·</span>
-          <a href="https://torbox.app/subscription" target="_blank" rel="noopener" class="hover:text-white transition">
+          <a href="https://torbox.app/subscription?referral=8250a966-1950-4684-973b-cd4e181b56ad" target="_blank" rel="noopener" class="hover:text-white transition">
             💎 Torbox
           </a>
           <span class="text-zinc-700">·</span>
@@ -1063,14 +1075,9 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
             GitHub
           </a>
           <span class="text-zinc-700">·</span>
-          <a href="/changelog?lang=en" class="hover:text-white transition flex items-center gap-1.5">
+          <a href="/changelog" class="hover:text-white transition flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"/></svg>
             <span id="last-update-text">Changelog</span>
-          </a>
-          <span class="text-zinc-700">·</span>
-          <a href="/legal" class="hover:text-white transition flex items-center gap-1.5">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Legal / Disclaimer
           </a>
           <span class="text-zinc-700">·</span>
           <span>Open source · MIT</span>
@@ -1106,7 +1113,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
     // dismissable e ricordato in localStorage per non rompere le palle).
     async function loadNotice() {
       try {
-        const r = await fetch('/api/notice?lang=en');
+        const r = await fetch('/api/notice');
         const d = await r.json();
         if (!d.notice) return;
         const dismissKey = 'pz-notice-' + (d.notice.date || '') + ':' + (d.notice.msg || '').slice(0, 32);
@@ -1133,7 +1140,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
     }
     async function loadLastUpdate() {
       try {
-        const r = await fetch('/api/changelog?lang=en');
+        const r = await fetch('/api/changelog');
         const d = await r.json();
         const first = (d.entries || [])[0];
         if (first?.date) {
@@ -1234,7 +1241,7 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
       if (!val) { $('#' + which + '-valid').classList.add('hidden'); return; }
       setValidBadge(which, 'loading');
       try {
-        const body = which === 'rd' ? { rd: val } : { tb: val };
+        const body = which === 'rd' ? { rd: val } : (which === 'ad' ? { ad: val } : { tb: val });
         const r = await fetch('/api/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const d = await r.json();
         const result = d[which];
@@ -1254,6 +1261,12 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
     if ($('#rd-key')) {
       $('#rd-key').addEventListener('input', dTestRd);
       if ($('#rd-key').value) testLive('rd');
+    }
+    // Stesso pattern per AD
+    const dTestAd = debounce(() => testLive('ad'), 700);
+    if ($('#ad-key')) {
+      $('#ad-key').addEventListener('input', dTestAd);
+      if ($('#ad-key').value) testLive('ad');
     }
 
     function base64UrlEncode(obj) {
@@ -1287,7 +1300,10 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
             '<input type="password" data-profile-rd="' + i + '" value="' + (p.rd || '').replace(/"/g, '&quot;') + '"' +
               ' class="input mono w-full rounded px-2.5 py-1.5 text-xs"' +
               ' placeholder="Chiave Real-Debrid (opzionale)" />' +
-            '<div class="text-[10px] text-zinc-500">Inserisci almeno una delle due. Vuoto = usa le chiavi globali sopra.</div>'
+            '<input type="password" data-profile-ad="' + i + '" value="' + (p.ad || '').replace(/"/g, '&quot;') + '"' +
+              ' class="input mono w-full rounded px-2.5 py-1.5 text-xs"' +
+              ' placeholder="Chiave All-Debrid (opzionale)" />' +
+            '<div class="text-[10px] text-zinc-500">Inserisci almeno una chiave. Vuoto = usa le chiavi globali sopra.</div>'
           : '';
         row.innerHTML =
           '<div class="flex items-center gap-2">' +
@@ -1307,6 +1323,9 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
       });
       wrap.querySelectorAll('[data-profile-rd]').forEach((el) => {
         el.addEventListener('input', (e) => { profiles[+e.target.dataset.profileRd].rd = e.target.value.trim(); });
+      });
+      wrap.querySelectorAll('[data-profile-ad]').forEach((el) => {
+        el.addEventListener('input', (e) => { profiles[+e.target.dataset.profileAd].ad = e.target.value.trim(); });
       });
       wrap.querySelectorAll('[data-profile-remove]').forEach((el) => {
         el.addEventListener('click', (e) => {
@@ -1332,32 +1351,37 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
       const btn = $('#generate-btn');
       const tb = $('#tb-key').value.trim();
       const rd = ($('#rd-key') && $('#rd-key').value.trim()) || '';
+      const ad = ($('#ad-key') && $('#ad-key').value.trim()) || '';
       const order = (document.querySelector('input[name="order"]:checked') || {}).value || 'smart';
 
       // Senza chiave → genera comunque link "solo HTTP"
       let payload = {};
       let validTb = '';
       let validRd = '';
+      let validAd = '';
 
-      if (tb || rd) {
+      if (tb || rd || ad) {
         btn.disabled = true;
         btn.textContent = 'Verifico...';
         try {
           const res = await fetch('/api/test', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tb, rd })
+            body: JSON.stringify({ tb, rd, ad })
           });
           const data = await res.json();
           validTb = (tb && data.tb && data.tb.ok) ? tb : '';
           validRd = (rd && data.rd && data.rd.ok) ? rd : '';
+          validAd = (ad && data.ad && data.ad.ok) ? ad : '';
           if (tb && !validTb) showStatus('La key Torbox non risulta valida.', 'err');
           if (rd && !validRd) showStatus('La key Real-Debrid non risulta valida.', 'err');
+          if (ad && !validAd) showStatus('La key All-Debrid non risulta valida.', 'err');
         } catch (e) {
           showStatus('Errore di rete: ' + e.message, 'err');
           btn.textContent = 'Genera link'; btn.disabled = false; return;
         }
         if (validTb) payload.tb = validTb;
         if (validRd) payload.rd = validRd;
+        if (validAd) payload.ad = validAd;
       }
       // Includo order solo se diverso dal default per tenere il link più corto
       if (order && order !== 'smart') payload.order = order;
@@ -1387,27 +1411,30 @@ function render({ base, rd, tb, order, aios, style, onlyTorrent, filter, fullIta
         // (TB o RD, locale o globale via fallback).
         if (keyMode === 'per-profile') {
           const missing = profiles
-            .filter((p) => !p.tb && !p.rd && !validTb && !validRd)
+            .filter((p) => !p.tb && !p.rd && !p.ad && !validTb && !validRd && !validAd)
             .map((p) => p.name)
             .join(', ');
           if (missing) {
-            showStatus('Inserisci almeno una chiave (Torbox o Real-Debrid) per: ' + missing, 'err');
+            showStatus('Inserisci almeno una chiave per: ' + missing, 'err');
             btn.textContent = 'Genera link'; btn.disabled = false;
             return;
           }
         }
         // Le impostazioni globali della pagina valgono per TUTTI i profili.
-        // Le chiavi TB/RD: per-profile usa quella inserita nel profilo (con
+        // Le chiavi: per-profile usa quella inserita nel profilo (con
         // fallback alla globale se vuota); shared usa solo le globali.
         const baseSettings = { ...payload };
         delete baseSettings.tb;
         delete baseSettings.rd;
+        delete baseSettings.ad;
         const results = profiles.map((p) => {
           const tbKey = keyMode === 'shared' ? validTb : (p.tb || validTb);
           const rdKey = keyMode === 'shared' ? validRd : (p.rd || validRd);
+          const adKey = keyMode === 'shared' ? validAd : (p.ad || validAd);
           const pPayload = { ...baseSettings };
           if (tbKey) pPayload.tb = tbKey;
           if (rdKey) pPayload.rd = rdKey;
+          if (adKey) pPayload.ad = adKey;
           const enc = base64UrlEncode(pPayload);
           return {
             name: p.name || 'Profilo',
